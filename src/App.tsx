@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Delivery from "./pages/Delivery";
 import OrderHistory from "./pages/OrderHistory";
+import TVMonitor from "./pages/TVMonitor";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                       <Route path="/tables" element={<TablesPage />} />
                       <Route path="/delivery" element={<Delivery />} />
                       <Route path="/history" element={<OrderHistory />} />
+                      <Route path="/monitor" element={<TVMonitor />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>

@@ -10,6 +10,7 @@ import {
   Ticket,
   UtensilsCrossed,
   Clock3,
+  Monitor,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navItems = [
   { title: "Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Entregas", path: "/delivery", icon: Ticket },
   { title: "Histórico", path: "/history", icon: Clock3 },
+  { title: "Monitor TV", path: "/monitor", icon: Monitor },
 ];
 
 export function AppSidebar() {
