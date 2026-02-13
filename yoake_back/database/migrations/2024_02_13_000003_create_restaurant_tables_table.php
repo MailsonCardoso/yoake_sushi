@@ -14,7 +14,8 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('number'); // Ex: 01, 12, VIP-1
             $table->integer('seats')->default(4);
-            $table->string('status')->default('free'); // free, occupied, payment, reserved
+            $table->enum('status', ['Livre', 'Ocupada', 'Pagamento', 'Reservada'])->default('Livre');
+            $table->decimal('current_total', 10, 2)->default(0);
             $table->uuid('current_order_id')->nullable();
             $table->timestamps();
         });

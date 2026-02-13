@@ -14,6 +14,7 @@ class RestaurantTable extends Model
         'number',
         'seats',
         'status',
+        'current_total',
         'current_order_id',
     ];
 

@@ -15,7 +15,7 @@ class RestaurantTableController extends Controller
     public function open(Request $request, $id)
     {
         $table = RestaurantTable::findOrFail($id);
-        $table->update(['status' => 'occupied']);
+        $table->update(['status' => 'Ocupada']);
         return $table;
     }
 
@@ -23,7 +23,8 @@ class RestaurantTableController extends Controller
     {
         $table = RestaurantTable::findOrFail($id);
         $table->update([
-            'status' => 'free',
+            'status' => 'Livre',
+            'current_total' => 0,
             'current_order_id' => null
         ]);
         return $table;

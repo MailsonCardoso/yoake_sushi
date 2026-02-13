@@ -31,6 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pedidos (POS & KDS)
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/kds', [OrderController::class, 'kds']);
+    Route::get('/orders/ready', [OrderController::class, 'ready']);
+    Route::get('/orders/active-delivery', [OrderController::class, 'activeDelivery']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);

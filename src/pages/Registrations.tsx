@@ -21,116 +21,127 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Package, Users, MapPin, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity } from "lucide-react";
+import axios from "axios";
 
 export default function Registrations() {
-  const { products, setProducts, customers, setCustomers } = useApp();
+  const { products, fetchData, customers } = useApp();
   const { toast } = useToast();
 
-  // Product state
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({ name: "", price: "", category: "Burgers" });
+  const [productForm, setProductForm] = useState({ name: "", price: "", category: "burgers", description: "" });
 
-  // Customer state
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", mapsLink: "" });
+  const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "" });
 
   const openProductModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
-      setProductForm({ name: product.name, price: String(product.price), category: product.category });
+      setProductForm({ name: product.name, price: String(product.price), category: product.category, description: product.description || "" });
     } else {
       setEditingProduct(null);
-      setProductForm({ name: "", price: "", category: "Burgers" });
+      setProductForm({ name: "", price: "", category: "burgers", description: "" });
     }
     setShowProductModal(true);
   };
 
-  const saveProduct = () => {
+  const saveProduct = async () => {
     if (!productForm.name || !productForm.price) return;
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? { ...p, name: productForm.name, price: Number(productForm.price), category: productForm.category }
-            : p
-        )
-      );
-      toast({ title: "Produto atualizado!" });
-    } else {
-      setProducts((prev) => [
-        ...prev,
-        { id: `p${Date.now()}`, name: productForm.name, price: Number(productForm.price), category: productForm.category },
-      ]);
-      toast({ title: "Produto criado!" });
+    try {
+      if (editingProduct) {
+        await axios.put(`https://api2.platformx.com.br/api/products/${editingProduct.id}`, {
+          ...productForm,
+          price: Number(productForm.price)
+        });
+        toast({ title: "Produto atualizado!" });
+      } else {
+        await axios.post(`https://api2.platformx.com.br/api/products`, {
+          ...productForm,
+          price: Number(productForm.price)
+        });
+        toast({ title: "Produto criado!" });
+      }
+      fetchData();
+      setShowProductModal(false);
+    } catch (error) {
+      toast({ title: "Erro ao salvar produto", variant: "destructive" });
     }
-    setShowProductModal(false);
   };
 
   const openCustomerModal = (customer?: Customer) => {
     if (customer) {
       setEditingCustomer(customer);
-      setCustomerForm({ name: customer.name, phone: customer.phone, address: customer.address, mapsLink: customer.mapsLink });
+      setCustomerForm({ name: customer.name, phone: customer.phone, address: customer.address, location_link: customer.location_link || "" });
     } else {
       setEditingCustomer(null);
-      setCustomerForm({ name: "", phone: "", address: "", mapsLink: "" });
+      setCustomerForm({ name: "", phone: "", address: "", location_link: "" });
     }
     setShowCustomerModal(true);
   };
 
-  const saveCustomer = () => {
+  const saveCustomer = async () => {
     if (!customerForm.name) return;
-    if (editingCustomer) {
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === editingCustomer.id ? { ...c, ...customerForm } : c))
-      );
-      toast({ title: "Cliente atualizado!" });
-    } else {
-      setCustomers((prev) => [...prev, { id: `c${Date.now()}`, ...customerForm }]);
-      toast({ title: "Cliente cadastrado!" });
+    try {
+      await axios.post(`https://api2.platformx.com.br/api/customers`, customerForm);
+      toast({ title: "Cadastro processado!" });
+      fetchData();
+      setShowCustomerModal(false);
+    } catch (error) {
+      toast({ title: "Erro ao cadastrar", variant: "destructive" });
     }
-    setShowCustomerModal(false);
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Cadastros</h1>
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Cadastros</h1>
+          <p className="text-muted-foreground text-sm">Gestão de cardápio e base de clientes</p>
+        </div>
+        <div className="flex gap-2">
+          <Badge variant="outline" className="gap-1 font-mono">
+            <Activity className="h-3 w-3 text-status-free" /> Online
+          </Badge>
+        </div>
+      </div>
 
-      <Tabs defaultValue="products">
-        <TabsList>
+      <Tabs defaultValue="products" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="products" className="gap-2">
-            <Package className="h-4 w-4" /> Produtos
+            <Package className="h-4 w-4" /> Produtos & Cardápio
           </TabsTrigger>
           <TabsTrigger value="customers" className="gap-2">
-            <Users className="h-4 w-4" /> Clientes
+            <Users className="h-4 w-4" /> Base de Clientes
           </TabsTrigger>
         </TabsList>
 
-        {/* Products Tab */}
-        <TabsContent value="products" className="mt-4">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-lg">Produtos</CardTitle>
-              <Button size="sm" onClick={() => openProductModal()}>
-                <Plus className="h-4 w-4 mr-1" /> Novo Produto
+        <TabsContent value="products">
+          <Card className="border-none shadow-premium">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Cardápio Ativo</CardTitle>
+              <Button size="sm" onClick={() => openProductModal()} className="shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4 mr-1" /> Novo Item
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors border border-transparent hover:border-border"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium text-sm">{product.name}</span>
-                      <Badge variant="secondary">{product.category}</Badge>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-sm leading-tight">{product.name}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-[10px] uppercase h-4 px-1">{product.category}</Badge>
+                        <span className="text-[10px] text-muted-foreground">ID: {product.id.split("-")[0]}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold text-sm text-primary">
-                        R$ {product.price.toFixed(2).replace(".", ",")}
+                    <div className="flex items-center gap-4">
+                      <span className="font-black text-sm text-primary">
+                        R$ {Number(product.price).toFixed(2).replace(".", ",")}
                       </span>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openProductModal(product)}>
                         <Pencil className="h-4 w-4" />
@@ -143,39 +154,35 @@ export default function Registrations() {
           </Card>
         </TabsContent>
 
-        {/* Customers Tab */}
-        <TabsContent value="customers" className="mt-4">
-          <Card className="border-none shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-lg">Clientes</CardTitle>
-              <Button size="sm" onClick={() => openCustomerModal()}>
+        <TabsContent value="customers">
+          <Card className="border-none shadow-premium">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Clientes Registrados</CardTitle>
+              <Button size="sm" onClick={() => openCustomerModal()} variant="secondary">
                 <Plus className="h-4 w-4 mr-1" /> Novo Cliente
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {customers.map((customer) => (
                   <div
                     key={customer.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/10 border border-border"
                   >
-                    <div className="space-y-1">
-                      <p className="font-medium text-sm">{customer.name}</p>
-                      <p className="text-xs text-muted-foreground">{customer.phone}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {customer.address}
+                    <div className="space-y-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{customer.name}</p>
+                      <p className="text-xs font-medium text-primary">{customer.phone}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 truncate max-w-[200px]">
+                        <MapPin className="h-3 w-3 shrink-0" /> {customer.address}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {customer.mapsLink && (
-                        <a
-                          href={customer.mapsLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:text-primary/80"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                    <div className="flex items-center gap-1">
+                      {customer.location_link && (
+                        <Button variant="ghost" size="icon" asChild>
+                          <a href={customer.location_link} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                          </a>
+                        </Button>
                       )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCustomerModal(customer)}>
                         <Pencil className="h-4 w-4" />
@@ -195,30 +202,36 @@ export default function Registrations() {
           <DialogHeader>
             <DialogTitle>{editingProduct ? "Editar Produto" : "Novo Produto"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div>
-              <Label>Nome</Label>
-              <Input value={productForm.name} onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))} />
+              <Label>Nome do Item</Label>
+              <Input value={productForm.name} onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ex: Temaki Salmão Completo" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Preço (R$)</Label>
+                <Input type="number" step="0.01" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Select value={productForm.category} onValueChange={(v) => setProductForm((p) => ({ ...p, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="burgers">Burgers</SelectItem>
+                    <SelectItem value="drinks">Bebidas</SelectItem>
+                    <SelectItem value="portions">Porções</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
-              <Label>Preço (R$)</Label>
-              <Input type="number" step="0.01" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Categoria</Label>
-              <Select value={productForm.category} onValueChange={(v) => setProductForm((p) => ({ ...p, category: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Burgers">Burgers</SelectItem>
-                  <SelectItem value="Bebidas">Bebidas</SelectItem>
-                  <SelectItem value="Porções">Porções</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Descrição / Ingredientes</Label>
+              <Input value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} placeholder="Breve descrição do produto..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowProductModal(false)}>Cancelar</Button>
-            <Button onClick={saveProduct}>Salvar</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowProductModal(false)}>Cancelar</Button>
+            <Button className="flex-1" onClick={saveProduct}>Salvar Alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -227,29 +240,29 @@ export default function Registrations() {
       <Dialog open={showCustomerModal} onOpenChange={setShowCustomerModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingCustomer ? "Editar Cliente" : "Novo Cliente"}</DialogTitle>
+            <DialogTitle>{editingCustomer ? "Editar Cadastro" : "Cadastro de Cliente"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div>
-              <Label>Nome</Label>
+              <Label>Nome Completo</Label>
               <Input value={customerForm.name} onChange={(e) => setCustomerForm((p) => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
-              <Label>Telefone</Label>
-              <Input value={customerForm.phone} onChange={(e) => setCustomerForm((p) => ({ ...p, phone: e.target.value }))} />
+              <Label>Telefone (WhatsApp)</Label>
+              <Input value={customerForm.phone} onChange={(e) => setCustomerForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(00) 00000-0000" />
             </div>
             <div>
-              <Label>Endereço</Label>
+              <Label>Endereço de Entrega Padrão</Label>
               <Input value={customerForm.address} onChange={(e) => setCustomerForm((p) => ({ ...p, address: e.target.value }))} />
             </div>
             <div>
-              <Label>Link Google Maps</Label>
-              <Input value={customerForm.mapsLink} onChange={(e) => setCustomerForm((p) => ({ ...p, mapsLink: e.target.value }))} placeholder="https://maps.google.com/..." />
+              <Label>Link do Google Maps</Label>
+              <Input value={customerForm.location_link} onChange={(e) => setCustomerForm((p) => ({ ...p, location_link: e.target.value }))} placeholder="https://maps.google.com/..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCustomerModal(false)}>Cancelar</Button>
-            <Button onClick={saveCustomer}>Salvar</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowCustomerModal(false)}>Cancelar</Button>
+            <Button className="flex-1" onClick={saveCustomer}>Finalizar Cadastro</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -30,7 +30,9 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  category: string;
+  category: "burgers" | "drinks" | "portions";
+  description?: string;
+  is_active: boolean;
 }
 
 export interface Customer {
@@ -38,7 +40,7 @@ export interface Customer {
   name: string;
   phone: string;
   address: string;
-  mapsLink: string;
+  location_link?: string;
 }
 
 export interface OrderItem {
@@ -50,23 +52,28 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  readable_id: string;
   items: OrderItem[];
   total: number;
   subtotal: number;
   type: "mesa" | "delivery" | "balcao";
+  channel: "iFood" | "WhatsApp" | "Balcão" | "Outros";
   table_id?: string;
   customer_id?: string;
-  customer_name?: string;
-  address?: string;
+  customer?: Customer;
+  table?: TableData;
+  delivery_address?: string;
   delivery_fee?: number;
-  status: "pending" | "preparing" | "ready" | "done";
+  status: "Pendente" | "Preparando" | "Pronto" | "Despachado" | "Concluído";
   created_at: string;
 }
 
 export interface TableData {
   id: string;
   number: string;
-  status: "free" | "occupied" | "payment" | "reserved";
+  seats: number;
+  status: "Livre" | "Ocupada" | "Pagamento" | "Reservada";
+  current_total: number;
   current_order_id?: string;
 }
 

@@ -6,9 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Clock, ChefHat, CheckCircle2 } from "lucide-react";
 
 const columns: { status: Order["status"]; title: string; icon: React.ElementType; colorClass: string }[] = [
-  { status: "pending", title: "Fila", icon: Clock, colorClass: "text-destructive" },
-  { status: "preparing", title: "Em Preparo", icon: ChefHat, colorClass: "text-status-payment" },
-  { status: "ready", title: "Pronto", icon: CheckCircle2, colorClass: "text-status-free" },
+  { status: "Pendente", title: "Fila", icon: Clock, colorClass: "text-destructive" },
+  { status: "Preparando", title: "Em Preparo", icon: ChefHat, colorClass: "text-status-payment" },
+  { status: "Pronto", title: "Pronto", icon: CheckCircle2, colorClass: "text-status-free" },
 ];
 
 export default function Kitchen() {
@@ -16,24 +16,30 @@ export default function Kitchen() {
   const { toast } = useToast();
 
   const nextStatus: Record<string, Order["status"]> = {
-    pending: "preparing",
-    preparing: "ready",
-    ready: "done",
+    Pendente: "Preparando",
+    Preparando: "Pronto",
+    Pronto: "Concluído",
   };
 
   const handleAdvance = (order: Order) => {
-    const next = nextStatus[order.status];
+    let next = nextStatus[order.status];
+
+    // Se for delivery e estiver pronto, o próximo passo é 'Despachado'
+    if (order.status === "Pronto" && order.type === "delivery") {
+      next = "Despachado";
+    }
+
     if (next) {
       updateOrderStatus(order.id, next);
       toast({
-        title: next === "done" ? "Pedido finalizado!" : "Status atualizado!",
-        description: `${order.id} → ${next === "preparing" ? "Em Preparo" : next === "ready" ? "Pronto" : "Entregue"}`,
+        title: "Status atualizado!",
+        description: `${order.readable_id} → ${next}`,
       });
     }
   };
 
-  const formatTime = (date: Date) => {
-    const d = new Date(date);
+  const formatTime = (dateString: string) => {
+    const d = new Date(dateString);
     return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   };
 
@@ -56,31 +62,34 @@ export default function Kitchen() {
                   <Card key={order.id} className="border-none shadow-sm">
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-sm font-bold text-primary">{order.id}</span>
-                        <span className="text-xs text-muted-foreground">{formatTime(order.createdAt)}</span>
+                        <span className="font-mono text-sm font-bold text-primary">{order.readable_id}</span>
+                        <span className="text-xs text-muted-foreground">{formatTime(order.created_at)}</span>
                       </div>
 
                       <div className="space-y-1">
                         {order.items.map((item, i) => (
                           <div key={i} className="flex justify-between text-sm">
-                            <span>{item.quantity}x {item.product.name}</span>
+                            <span>{item.quantity}x {item.product?.name}</span>
                           </div>
                         ))}
                       </div>
 
-                      {order.type !== "counter" && (
+                      <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
-                          {order.type === "table" ? `Mesa ${order.tableId}` : `Delivery - ${order.customerName || ""}`}
+                          {order.type === "mesa" ? `Mesa ${order.table?.number || ""}` :
+                            order.type === "delivery" ? `Delivery - ${order.customer?.name || "N/I"}` :
+                              "Balcão"}
                         </p>
-                      )}
+                        <Badge variant="outline" className="text-[10px] h-4">{order.type}</Badge>
+                      </div>
 
                       <Button
                         size="sm"
                         className="w-full"
-                        variant={col.status === "ready" ? "default" : "secondary"}
+                        variant={col.status === "Pronto" ? "default" : "secondary"}
                         onClick={() => handleAdvance(order)}
                       >
-                        {col.status === "ready" ? "Finalizar" : "Avançar"}
+                        {col.status === "Pronto" ? (order.type === "delivery" ? "Despachar" : "Finalizar") : "Avançar"}
                         <ArrowRight className="h-4 w-4 ml-1" />
                       </Button>
                     </CardContent>

@@ -12,12 +12,14 @@ return new class extends Migration {
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->string('readable_id')->unique();
             $table->uuid('customer_id')->nullable();
             $table->uuid('table_id')->nullable();
-            $table->string('type'); // mesa, balcao, delivery
-            $table->string('channel')->default('Balcão'); // iFood, WhatsApp, Balcão
-            $table->string('status')->default('pending'); // pending, preparing, ready, done
+            $table->enum('type', ['mesa', 'balcao', 'delivery']);
+            $table->enum('channel', ['iFood', 'WhatsApp', 'Balcão', 'Outros'])->default('Balcão');
+            $table->enum('status', ['Pendente', 'Preparando', 'Pronto', 'Despachado', 'Concluído'])->default('Pendente');
             $table->string('payment_method')->nullable();
+            $table->text('delivery_address')->nullable();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('delivery_fee', 10, 2)->default(0);
             $table->decimal('total', 10, 2);

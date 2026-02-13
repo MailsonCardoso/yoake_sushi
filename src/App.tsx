@@ -15,6 +15,7 @@ import Operations from "./pages/Operations";
 import Vouchers from "./pages/Vouchers";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Delivery from "./pages/Delivery";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
                       <Route path="/registrations" element={<Registrations />} />
                       <Route path="/kitchen" element={<Kitchen />} />
                       <Route path="/tables" element={<TablesPage />} />
+                      <Route path="/delivery" element={<Delivery />} />
                       <Route path="/erp" element={<ERP />} />
                       <Route path="/operations" element={<Operations />} />
                       <Route path="/vouchers" element={<Vouchers />} />

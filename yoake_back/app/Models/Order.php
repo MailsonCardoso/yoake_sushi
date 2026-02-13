@@ -11,16 +11,28 @@ class Order extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
+        'readable_id',
         'customer_id',
         'table_id',
         'type',
         'channel',
         'status',
         'payment_method',
+        'delivery_address',
         'subtotal',
         'delivery_fee',
         'total',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $lastOrder = static::orderBy('created_at', 'desc')->first();
+            $nextNumber = $lastOrder ? (int) str_replace('#PED-', '', $lastOrder->readable_id) + 1 : 1001;
+            $model->readable_id = '#PED-' . $nextNumber;
+        });
+    }
 
     protected $casts = [
         'subtotal' => 'decimal:2',

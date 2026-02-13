@@ -14,24 +14,31 @@ import {
 export default function Dashboard() {
   const { orders, tables } = useApp();
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-  const activeOrders = orders.filter((o) => o.status !== "done").length;
-  const occupiedTables = tables.filter((t) => t.status === "occupied").length;
+  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+  const activeOrders = orders.filter((o) => o.status !== "Concluído").length;
+  const occupiedTables = tables.filter((t) => t.status === "Ocupada").length;
+
+  const revenueByChannel = (channel: string) => {
+    return orders
+      .filter(o => o.channel === channel)
+      .reduce((sum, o) => sum + Number(o.total), 0);
+  };
 
   const kpis = [
-    { title: "iFood", value: "R$ 1.240,00", icon: Smartphone, colorClass: "kpi-ifood" },
-    { title: "Balcão", value: "R$ 890,00", icon: Store, colorClass: "kpi-counter" },
-    { title: "Delivery", value: "R$ 650,00", icon: Truck, colorClass: "kpi-delivery" },
+    { title: "iFood", value: `R$ ${revenueByChannel("iFood").toFixed(2)}`, icon: Smartphone, colorClass: "kpi-ifood" },
+    { title: "Balcão", value: `R$ ${revenueByChannel("Balcão").toFixed(2)}`, icon: Store, colorClass: "kpi-counter" },
+    { title: "WhatsApp", value: `R$ ${revenueByChannel("WhatsApp").toFixed(2)}`, icon: Truck, colorClass: "kpi-delivery" },
     { title: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, colorClass: "kpi-total" },
   ];
 
   const recentOrders = orders.slice(0, 5);
 
   const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    pending: { label: "Pendente", variant: "destructive" },
-    preparing: { label: "Preparando", variant: "default" },
-    ready: { label: "Pronto", variant: "secondary" },
-    done: { label: "Entregue", variant: "outline" },
+    Pendente: { label: "Pendente", variant: "destructive" },
+    Preparando: { label: "Preparando", variant: "default" },
+    Pronto: { label: "Pronto", variant: "secondary" },
+    Despachado: { label: "Em Trânsito", variant: "default" },
+    Concluído: { label: "Entregue", variant: "outline" },
   };
 
   return (
@@ -78,18 +85,18 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold text-primary">
-                      {order.id}
+                      {order.readable_id}
                     </span>
-                    <span className="text-sm text-muted-foreground">
-                      {order.items.map((i) => `${i.quantity}x ${i.product.name}`).join(", ")}
+                    <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                      {order.items.map((i) => `${i.quantity}x ${i.product?.name || "Prod"}`).join(", ")}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium">
-                      R$ {order.total.toFixed(2).replace(".", ",")}
+                      R$ {Number(order.total).toFixed(2).replace(".", ",")}
                     </span>
-                    <Badge variant={statusMap[order.status].variant}>
-                      {statusMap[order.status].label}
+                    <Badge variant={statusMap[order.status]?.variant || "outline"}>
+                      {statusMap[order.status]?.label || order.status}
                     </Badge>
                   </div>
                 </div>
@@ -112,11 +119,11 @@ export default function Dashboard() {
           <CardContent className="space-y-3">
             <div className="p-3 rounded-lg bg-destructive/10 text-sm">
               <p className="font-medium text-destructive">Estoque Baixo</p>
-              <p className="text-muted-foreground mt-1">Coca-Cola 350ml - apenas 5 unidades</p>
+              <p className="text-muted-foreground mt-1">Ingredientes de Sushi - verificar estoque</p>
             </div>
             <div className="p-3 rounded-lg bg-status-payment/10 text-sm">
-              <p className="font-medium text-status-payment">Mesa Aguardando</p>
-              <p className="text-muted-foreground mt-1">Mesa 6 aguardando pagamento há 15 min</p>
+              <p className="font-medium text-status-payment">Fluxo de Caixa</p>
+              <p className="text-muted-foreground mt-1">Grande volume de pedidos pelo iFood hoje</p>
             </div>
             <div className="p-3 rounded-lg bg-primary/10 text-sm">
               <p className="font-medium text-primary">Pedidos Ativos</p>

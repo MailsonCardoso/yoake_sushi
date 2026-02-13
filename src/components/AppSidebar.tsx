@@ -21,6 +21,7 @@ const navItems = [
   { title: "Cadastros", path: "/registrations", icon: ClipboardList },
   { title: "Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
   { title: "Mesas", path: "/tables", icon: Grid3X3 },
+  { title: "Entregas", path: "/delivery", icon: Ticket },
   { title: "ERP", path: "/erp", icon: Building2 },
   { title: "Operações", path: "/operations", icon: Settings },
   { title: "Vouchers", path: "/vouchers", icon: Ticket },

@@ -17,7 +17,7 @@ class OrderController extends Controller
 
         if ($request->has('status')) {
             if ($request->status === 'active') {
-                $query->whereIn('status', ['pending', 'preparing', 'ready']);
+                $query->whereIn('status', ['Pendente', 'Preparando', 'Pronto', 'Despachado']);
             } else {
                 $query->where('status', $request->status);
             }
@@ -26,14 +26,40 @@ class OrderController extends Controller
         return $query->latest()->get();
     }
 
+    public function kds()
+    {
+        return Order::with(['items.product', 'customer', 'table'])
+            ->whereIn('status', ['Pendente', 'Preparando'])
+            ->oldest()
+            ->get();
+    }
+
+    public function ready()
+    {
+        return Order::with(['items.product', 'customer', 'table'])
+            ->where('status', 'Pronto')
+            ->where('type', 'delivery')
+            ->oldest()
+            ->get();
+    }
+
+    public function activeDelivery()
+    {
+        return Order::with(['items.product', 'customer', 'table'])
+            ->where('status', 'Despachado')
+            ->latest()
+            ->get();
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'nullable|uuid',
             'table_id' => 'nullable|uuid',
-            'type' => 'required|string',
+            'type' => 'required|in:mesa,balcao,delivery',
             'channel' => 'required|string',
             'payment_method' => 'nullable|string',
+            'delivery_address' => 'nullable|string',
             'subtotal' => 'required|numeric',
             'delivery_fee' => 'nullable|numeric',
             'total' => 'required|numeric',
@@ -45,7 +71,7 @@ class OrderController extends Controller
 
         return DB::transaction(function () use ($validated) {
             $orderData = collect($validated)->except('items')->toArray();
-            $orderData['status'] = 'pending';
+            $orderData['status'] = 'Pendente';
 
             $order = Order::create($orderData);
 
@@ -61,7 +87,8 @@ class OrderController extends Controller
             // Se for pedido de mesa, atualiza o status da mesa
             if ($order->type === 'mesa' && $order->table_id) {
                 RestaurantTable::where('id', $order->table_id)->update([
-                    'status' => 'occupied',
+                    'status' => 'Ocupada',
+                    'current_total' => $order->total,
                     'current_order_id' => $order->id
                 ]);
             }
@@ -72,10 +99,20 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $request->validate(['status' => 'required|string']);
+        $request->validate(['status' => 'required|in:Pendente,Preparando,Pronto,Despachado,Concluído']);
 
         $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
         $order->update(['status' => $request->status]);
+
+        // Se o pedido era de mesa e foi concluído, libera a mesa
+        if ($order->type === 'mesa' && $order->table_id && $request->status === 'Concluído') {
+            RestaurantTable::where('id', $order->table_id)->update([
+                'status' => 'Livre',
+                'current_total' => 0,
+                'current_order_id' => null
+            ]);
+        }
 
         return $order;
     }
