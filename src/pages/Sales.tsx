@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useApp, Product, OrderItem } from "@/contexts/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,12 +39,20 @@ const categories = ["Todos", "burgers", "drinks", "portions"];
 export default function Sales() {
   const { products, customers, tables, addOrder } = useApp();
   const { toast } = useToast();
+  const location = useLocation();
 
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [cart, setCart] = useState<{ product: Product, quantity: number }[]>([]);
   const [orderType, setOrderType] = useState<"table" | "delivery" | "counter">("counter");
   const [orderChannel, setOrderChannel] = useState<string>("Balcão");
   const [selectedTable, setSelectedTable] = useState<string>("");
+
+  useEffect(() => {
+    if (location.state?.tableId) {
+      setOrderType("table");
+      setSelectedTable(location.state.tableId);
+    }
+  }, [location.state]);
   const [customerName, setCustomerName] = useState("");
   const [customerId, setCustomerId] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
