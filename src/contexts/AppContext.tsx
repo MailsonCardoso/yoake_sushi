@@ -1,4 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+
+const API_URL = "https://api2.platformx.com.br/api";
 
 export interface Product {
   id: string;
@@ -16,28 +20,32 @@ export interface Customer {
 }
 
 export interface OrderItem {
-  product: Product;
+  product_id: string;
+  product?: Product;
   quantity: number;
+  unit_price: number;
 }
 
 export interface Order {
   id: string;
   items: OrderItem[];
   total: number;
-  type: "table" | "delivery" | "counter";
-  tableId?: number;
-  customerName?: string;
+  subtotal: number;
+  type: "mesa" | "delivery" | "balcao";
+  table_id?: string;
+  customer_id?: string;
+  customer_name?: string;
   address?: string;
-  deliveryFee?: number;
+  delivery_fee?: number;
   status: "pending" | "preparing" | "ready" | "done";
-  createdAt: Date;
+  created_at: string;
 }
 
 export interface TableData {
-  id: number;
+  id: string;
+  number: string;
   status: "free" | "occupied" | "payment" | "reserved";
-  people?: number;
-  orderId?: string;
+  current_order_id?: string;
 }
 
 interface AppContextType {
@@ -49,118 +57,69 @@ interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   tables: TableData[];
   setTables: React.Dispatch<React.SetStateAction<TableData[]>>;
-  addOrder: (order: Omit<Order, "id" | "createdAt">) => void;
-  updateOrderStatus: (id: string, status: Order["status"]) => void;
+  addOrder: (order: any) => Promise<void>;
+  updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
+  fetchData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const initialProducts: Product[] = [
-  { id: "p1", name: "X-Burger", price: 28.9, category: "Burgers" },
-  { id: "p2", name: "X-Salada", price: 26.9, category: "Burgers" },
-  { id: "p3", name: "X-Bacon", price: 32.9, category: "Burgers" },
-  { id: "p4", name: "X-Tudo", price: 36.9, category: "Burgers" },
-  { id: "p5", name: "Coca-Cola 350ml", price: 6.0, category: "Bebidas" },
-  { id: "p6", name: "Suco Natural", price: 10.0, category: "Bebidas" },
-  { id: "p7", name: "Água Mineral", price: 4.0, category: "Bebidas" },
-  { id: "p8", name: "Cerveja 600ml", price: 14.0, category: "Bebidas" },
-  { id: "p9", name: "Batata Frita", price: 18.0, category: "Porções" },
-  { id: "p10", name: "Onion Rings", price: 22.0, category: "Porções" },
-  { id: "p11", name: "Nuggets 10un", price: 20.0, category: "Porções" },
-];
-
-const initialCustomers: Customer[] = [
-  { id: "c1", name: "João Silva", phone: "(11) 99999-1234", address: "Rua das Flores, 123 - Centro", mapsLink: "https://maps.google.com/?q=Rua+das+Flores+123" },
-  { id: "c2", name: "Maria Santos", phone: "(11) 98888-5678", address: "Av. Brasil, 456 - Jardim", mapsLink: "https://maps.google.com/?q=Av+Brasil+456" },
-  { id: "c3", name: "Pedro Costa", phone: "(11) 97777-9012", address: "Rua Oliveira, 789 - Vila Nova", mapsLink: "https://maps.google.com/?q=Rua+Oliveira+789" },
-];
-
-const initialOrders: Order[] = [
-  {
-    id: "ORD-001",
-    items: [
-      { product: initialProducts[0], quantity: 2 },
-      { product: initialProducts[4], quantity: 2 },
-    ],
-    total: 69.8,
-    type: "table",
-    tableId: 3,
-    status: "preparing",
-    createdAt: new Date(Date.now() - 1800000),
-  },
-  {
-    id: "ORD-002",
-    items: [
-      { product: initialProducts[2], quantity: 1 },
-      { product: initialProducts[8], quantity: 1 },
-    ],
-    total: 50.9,
-    type: "delivery",
-    customerName: "João Silva",
-    address: "Rua das Flores, 123 - Centro",
-    deliveryFee: 8.0,
-    status: "pending",
-    createdAt: new Date(Date.now() - 600000),
-  },
-  {
-    id: "ORD-003",
-    items: [{ product: initialProducts[3], quantity: 1 }],
-    total: 36.9,
-    type: "counter",
-    status: "ready",
-    createdAt: new Date(Date.now() - 3600000),
-  },
-];
-
-const initialTables: TableData[] = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  status: (i === 2 ? "occupied" : i === 5 ? "payment" : i === 8 ? "reserved" : "free") as TableData["status"],
-  people: i === 2 ? 4 : i === 5 ? 2 : undefined,
-  orderId: i === 2 ? "ORD-001" : undefined,
-}));
-
-let orderCounter = 4;
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [tables, setTables] = useState<TableData[]>(initialTables);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [tables, setTables] = useState<TableData[]>([]);
+  const { toast } = useToast();
 
-  const addOrder = (order: Omit<Order, "id" | "createdAt">) => {
-    const newOrder: Order = {
-      ...order,
-      id: `ORD-${String(orderCounter++).padStart(3, "0")}`,
-      createdAt: new Date(),
-    };
-    setOrders((prev) => [newOrder, ...prev]);
-
-    if (order.type === "table" && order.tableId) {
-      setTables((prev) =>
-        prev.map((t) =>
-          t.id === order.tableId ? { ...t, status: "occupied" as const, orderId: newOrder.id } : t
-        )
-      );
+  const fetchData = async () => {
+    try {
+      const [resProducts, resCustomers, resOrders, resTables] = await Promise.all([
+        axios.get(`${API_URL}/products`),
+        axios.get(`${API_URL}/customers`),
+        axios.get(`${API_URL}/orders?status=active`),
+        axios.get(`${API_URL}/tables`),
+      ]);
+      setProducts(resProducts.data);
+      setCustomers(resCustomers.data);
+      setOrders(resOrders.data);
+      setTables(resTables.data);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
     }
   };
 
-  const updateOrderStatus = (id: string, status: Order["status"]) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    if (status === "done") {
-      const order = orders.find((o) => o.id === id);
-      if (order?.type === "table" && order.tableId) {
-        setTables((prev) =>
-          prev.map((t) =>
-            t.id === order.tableId ? { ...t, status: "free" as const, people: undefined, orderId: undefined } : t
-          )
-        );
-      }
+  useEffect(() => {
+    fetchData();
+    // Poll for changes every 30 seconds for KDS
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const addOrder = async (orderData: any) => {
+    try {
+      const response = await axios.post(`${API_URL}/orders`, orderData);
+      setOrders((prev) => [response.data, ...prev]);
+      toast({ title: "Pedido enviado com sucesso!" });
+      fetchData(); // Refresh tables and states
+    } catch (error) {
+      toast({ title: "Erro ao enviar pedido", variant: "destructive" });
+    }
+  };
+
+  const updateOrderStatus = async (id: string, status: Order["status"]) => {
+    try {
+      await axios.patch(`${API_URL}/orders/${id}/status`, { status });
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+      toast({ title: `Status atualizado para ${status}` });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Erro ao atualizar status", variant: "destructive" });
     }
   };
 
   return (
     <AppContext.Provider
-      value={{ products, setProducts, customers, setCustomers, orders, setOrders, tables, setTables, addOrder, updateOrderStatus }}
+      value={{ products, setProducts, customers, setCustomers, orders, setOrders, tables, setTables, addOrder, updateOrderStatus, fetchData }}
     >
       {children}
     </AppContext.Provider>
