@@ -156,24 +156,24 @@ export default function Sales() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8fafc]">
       {/* Left: Products Section */}
-      <div className="flex-1 flex flex-col p-8 overflow-auto">
-        <h1 className="text-2xl font-black text-slate-800 mb-8">Tela de Pedido (PDV)</h1>
+      <div className="flex-1 flex flex-col p-6 overflow-auto">
+        <h1 className="text-xl font-black text-slate-800 mb-6">Pedidos (PDV)</h1>
 
         {/* Categories Bar */}
-        <div className="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar">
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((cat) => (
             <button
               key={cat.name}
               onClick={() => setSelectedCategory(cat.name)}
               className={cn(
-                "flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all border-2",
+                "flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border-2",
                 selectedCategory === cat.name
                   ? "bg-[#6366f1] text-white border-[#6366f1] shadow-lg shadow-indigo-100"
                   : "bg-white text-slate-500 border-transparent hover:border-slate-200"
               )}
             >
-              <cat.icon className={cn("h-5 w-5", selectedCategory === cat.name ? "text-white" : "text-slate-400")} />
-              {cat.label || cat.name}
+              <cat.icon className={cn("h-4 w-4", selectedCategory === cat.name ? "text-white" : "text-slate-400")} />
+              <span className="text-sm">{cat.label || cat.name}</span>
             </button>
           ))}
         </div>
@@ -183,14 +183,14 @@ export default function Sales() {
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="group p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[160px] relative"
+              className="group p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[140px] relative"
             >
-              <div className="flex-1 mb-4">
-                <h3 className="font-black text-slate-800 text-lg leading-tight mb-1">{product.name}</h3>
-                <p className="text-xs text-slate-400 font-medium line-clamp-2">{product.description || "Sem descrição disponível"}</p>
+              <div className="flex-1 mb-3">
+                <h3 className="font-bold text-slate-800 text-base leading-tight mb-1">{product.name}</h3>
+                <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description || "Sem descrição disponível"}</p>
               </div>
               <div className="flex items-center justify-between mt-auto">
-                <span className="text-xl font-black text-[#6366f1]">
+                <span className="text-lg font-black text-[#6366f1]">
                   R$ {Number(product.price).toFixed(2).replace(".", ",")}
                 </span>
                 <Button
@@ -248,7 +248,7 @@ export default function Sales() {
             <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Nome do Cliente..."
-              className="pl-11 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all"
+              className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
               value={customerName}
               onChange={(e) => handleCustomerSelect(e.target.value)}
               list="customers-list"
@@ -266,14 +266,14 @@ export default function Sales() {
                 <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Endereço Entrega..."
-                  className="pl-11 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all"
+                  className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                 />
               </div>
               <Button
                 variant="secondary"
-                className="h-12 w-12 rounded-2xl bg-[#6366f1] text-white hover:bg-[#4f46e5] font-bold p-0 text-xs shadow-lg shadow-indigo-100"
+                className="h-10 w-10 rounded-xl bg-[#6366f1] text-white hover:bg-[#4f46e5] font-bold p-0 text-[10px] shadow-lg shadow-indigo-100"
                 onClick={() => setOrderType("delivery")}
               >
                 Calc
@@ -281,9 +281,9 @@ export default function Sales() {
             </div>
           ) : (
             <div className="relative">
-              <Hash className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+              <Hash className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
               <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger className="pl-11 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white outline-none">
+                <SelectTrigger className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white outline-none text-sm">
                   <SelectValue placeholder="Selecionar Mesa..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,8 +353,8 @@ export default function Sales() {
               </div>
             )}
             <div className="flex justify-between items-center pt-2">
-              <span className="text-xl font-black text-slate-800">Total</span>
-              <span className="text-3xl font-black text-[#6366f1]">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
+              <span className="text-lg font-black text-slate-800">Total</span>
+              <span className="text-2xl font-black text-[#6366f1]">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
             </div>
           </div>
 
@@ -368,7 +368,7 @@ export default function Sales() {
               Cancelar
             </Button>
             <Button
-              className="flex-[2] h-14 rounded-2xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-lg shadow-xl shadow-indigo-100 disabled:opacity-50"
+              className="flex-[2] h-12 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-base shadow-xl shadow-indigo-100 disabled:opacity-50"
               onClick={handleSendOrder}
               disabled={cart.length === 0}
             >
