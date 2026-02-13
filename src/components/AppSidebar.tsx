@@ -19,11 +19,11 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", path: "/", icon: LayoutDashboard },
-  { title: "Vendas (PDV)", path: "/sales", icon: ShoppingCart },
-  { title: "Cadastros", path: "/registrations", icon: ClipboardList },
-  { title: "Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
-  { title: "Mesas", path: "/tables", icon: Grid3X3 },
+  { title: "Gestão de Vendas", path: "/sales", icon: ShoppingCart },
   { title: "App do Entregador", path: "/delivery", icon: Bike },
+  { title: "Cadastros", path: "/registrations", icon: ClipboardList },
+  { title: "Monitor Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
+  { title: "Gestão de Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Histórico", path: "/history", icon: Clock3 },
   { title: "Monitor TV", path: "/monitor", icon: Monitor },
 ];
