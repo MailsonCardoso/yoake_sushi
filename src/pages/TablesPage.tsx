@@ -93,8 +93,12 @@ export default function TablesPage() {
       setShowAddTableModal(false);
       setAddTableForm({ number: "", seats: "2" });
       fetchData();
-    } catch (error) {
-      toast({ title: "Erro ao criar mesa", description: "Verifique se o número já existe", variant: "destructive" });
+    } catch (error: any) {
+      console.error("Erro ao criar mesa:", error.response?.data || error);
+      const message = error.response?.status === 422
+        ? "Esta mesa já existe no sistema."
+        : "Erro interno do servidor ao criar mesa.";
+      toast({ title: "Erro ao criar mesa", description: message, variant: "destructive" });
     }
   };
 

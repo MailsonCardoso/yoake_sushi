@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
 
@@ -33,7 +34,7 @@ class RestaurantTableController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'number' => 'required|string|unique:restaurant_tables',
+            'number' => 'required|string|unique:restaurant_tables,number',
             'seats' => 'required|integer|min:1',
         ]);
 
