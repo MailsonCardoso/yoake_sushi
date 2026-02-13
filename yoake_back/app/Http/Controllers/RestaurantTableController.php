@@ -29,4 +29,17 @@ class RestaurantTableController extends Controller
         ]);
         return $table;
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'number' => 'required|string|unique:restaurant_tables',
+            'seats' => 'required|integer|min:1',
+        ]);
+
+        $validated['status'] = 'Livre';
+        $validated['current_total'] = 0;
+
+        return RestaurantTable::create($validated);
+    }
 }

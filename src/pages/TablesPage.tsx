@@ -74,8 +74,29 @@ export default function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [showOpenModal, setShowOpenModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showAddTableModal, setShowAddTableModal] = useState(false);
+  const [addTableForm, setAddTableForm] = useState({ number: "", seats: "2" });
   const [peopleCount, setPeopleCount] = useState("2");
   const [filter, setFilter] = useState<"Todas" | "Livres" | "Ocupadas">("Todas");
+
+  const handleAddTable = async () => {
+    if (!addTableForm.number) {
+      toast({ title: "Número da mesa é obrigatório", variant: "destructive" });
+      return;
+    }
+    try {
+      await axios.post(`https://api2.platformx.com.br/api/tables`, {
+        number: addTableForm.number,
+        seats: Number(addTableForm.seats)
+      });
+      toast({ title: "Mesa criada com sucesso!" });
+      setShowAddTableModal(false);
+      setAddTableForm({ number: "", seats: "2" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Erro ao criar mesa", description: "Verifique se o número já existe", variant: "destructive" });
+    }
+  };
 
   // State to force re-render for time calculation
   const [, setTick] = useState(0);
@@ -173,7 +194,10 @@ export default function TablesPage() {
               </button>
             ))}
           </div>
-          <Button className="bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl gap-2 font-bold shadow-lg shadow-indigo-100">
+          <Button
+            className="bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl gap-2 font-bold shadow-lg shadow-indigo-100"
+            onClick={() => setShowAddTableModal(true)}
+          >
             <Plus className="h-5 w-5" />
             Nova Mesa
           </Button>
@@ -346,6 +370,40 @@ export default function TablesPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Table Modal */}
+      <Dialog open={showAddTableModal} onOpenChange={setShowAddTableModal}>
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-slate-800">Nova Mesa</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold uppercase text-slate-500">Número da Mesa</Label>
+              <Input
+                placeholder="Ex: 05"
+                className="h-12 rounded-xl"
+                value={addTableForm.number}
+                onChange={(e) => setAddTableForm(prev => ({ ...prev, number: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-bold uppercase text-slate-500">Quantidade de Lugares</Label>
+              <Input
+                type="number"
+                min="1"
+                className="h-12 rounded-xl"
+                value={addTableForm.seats}
+                onChange={(e) => setAddTableForm(prev => ({ ...prev, seats: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex gap-3 sm:flex-row flex-col">
+            <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold" onClick={() => setShowAddTableModal(false)}>Cancelar</Button>
+            <Button className="flex-1 rounded-2xl h-12 font-bold bg-[#6366f1] hover:bg-[#4f46e5]" onClick={handleAddTable}>Criar Mesa</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

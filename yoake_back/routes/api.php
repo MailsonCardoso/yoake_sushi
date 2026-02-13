@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Mesas
     Route::get('/tables', [RestaurantTableController::class, 'index']);
+    Route::post('/tables', [RestaurantTableController::class, 'store']);
     Route::patch('/tables/{id}/open', [RestaurantTableController::class, 'open']);
     Route::patch('/tables/{id}/close', [RestaurantTableController::class, 'close']);
 
