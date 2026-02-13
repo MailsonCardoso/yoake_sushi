@@ -1,8 +1,11 @@
 import { useApp, Order } from "@/contexts/AppContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, CheckCircle2, Navigation, Package } from "lucide-react";
+import { MapPin, CheckCircle2, Bike, Clock, ExternalLink, Hash } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function Delivery() {
     const { orders, updateOrderStatus } = useApp();
@@ -15,114 +18,164 @@ export default function Delivery() {
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <Package className="h-6 w-6 text-primary" />
-                    Portal do Entregador
-                </h1>
-                <div className="flex gap-2">
-                    <Badge variant="outline">{readyToDispatch.length} Para Coleta</Badge>
-                    <Badge variant="default" className="bg-status-payment">{onTheWay.length} Em Trânsito</Badge>
+        <div className="p-8 max-w-7xl mx-auto space-y-8 bg-[#f8fafc] min-h-screen">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
+                        <Bike className="h-8 w-8 text-[#6366f1]" />
+                        Portal do Entregador
+                    </h1>
+                    <p className="text-slate-400 font-medium mt-1">Gerencie retiradas e confirmações de entrega.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Button className="bg-[#6366f1] hover:bg-[#4f46e5] rounded-2xl gap-2 font-bold shadow-lg shadow-indigo-100">
+                        <Plus className="h-4 w-4" /> Novo Pedido
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Coluna: Disponíveis para Coleta */}
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-muted-foreground">
-                        <Package className="h-5 w-5" />
-                        Disponíveis para Coleta
-                    </h2>
-                    {readyToDispatch.map(order => (
-                        <Card key={order.id} className="border-l-4 border-l-primary shadow-sm">
-                            <CardContent className="p-4 space-y-4">
-                                <div className="flex justify-between items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Coluna 1: AGUARDANDO RETIRADA */}
+                <section className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-sm font-black text-[#10b981] uppercase tracking-widest flex items-center gap-2">
+                            Aguardando Retirada (Prontos)
+                            <Badge className="bg-[#10b981] hover:bg-[#10b981] text-white rounded-full h-6 w-6 flex items-center justify-center p-0 text-[10px] border-none">
+                                {readyToDispatch.length}
+                            </Badge>
+                        </h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        {readyToDispatch.map(order => (
+                            <Card key={order.id} className="border-none shadow-sm rounded-[32px] overflow-hidden bg-white hover:shadow-md transition-all group border-l-8 border-l-[#10b981]/10">
+                                <CardContent className="p-6 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <Hash className="h-4 w-4 text-slate-300" />
+                                            <span className="text-xl font-black text-slate-800">{order.readable_id}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl">
+                                            <Clock className="h-3 w-3 text-slate-400" />
+                                            <span className="text-xs font-black text-slate-500">
+                                                {format(new Date(order.created_at), "HH:mm", { locale: ptBR })}
+                                            </span>
+                                        </div>
+                                    </div>
+
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground">{order.readable_id}</span>
-                                        <h3 className="font-bold text-lg">{order.customer?.name || "Cliente Final"}</h3>
+                                        <h3 className="font-black text-slate-700 text-lg mb-1">{order.customer?.name || "Consumidor Final"}</h3>
+                                        <div className="flex items-center gap-2 text-slate-400 hover:text-[#6366f1] transition-colors cursor-pointer group/link">
+                                            <MapPin className="h-4 w-4" />
+                                            <span className="text-sm font-bold truncate flex-1">
+                                                {order.delivery_address || "Retirada no Balcão"}
+                                            </span>
+                                            <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                        </div>
                                     </div>
-                                    <Badge variant="secondary">R$ {Number(order.total).toFixed(2)}</Badge>
-                                </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2 text-sm">
-                                        <MapPin className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
-                                        <span className="leading-tight">{order.delivery_address || order.customer?.address || "Retirada no local"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                        <span>{order.customer?.phone || "N/I"}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 pt-2">
                                     <Button
-                                        className="flex-1 gap-2"
+                                        className="w-full h-14 rounded-2xl bg-[#10b981] hover:bg-[#059669] text-white font-black text-base shadow-lg shadow-emerald-50 gap-3"
                                         onClick={() => handleStatusUpdate(order.id, "Despachado")}
                                     >
-                                        <Navigation className="h-4 w-4" />
-                                        Iniciar Entrega
+                                        <Bike className="h-5 w-5" />
+                                        Iniciar Entrega (Pegar)
                                     </Button>
-                                    {order.customer?.location_link && (
-                                        <Button variant="outline" size="icon" asChild>
-                                            <a href={order.customer.location_link} target="_blank" rel="noopener noreferrer">
-                                                <MapPin className="h-4 w-4" />
-                                            </a>
-                                        </Button>
-                                    )}
+                                </CardContent>
+                            </Card>
+                        ))}
+                        {readyToDispatch.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-[32px] border-2 border-dashed border-slate-200">
+                                <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                                    <Bike className="h-8 w-8 text-slate-200" />
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                    {readyToDispatch.length === 0 && (
-                        <div className="text-center py-12 border-2 border-dashed rounded-lg text-muted-foreground text-sm">
-                            Nenhum pedido pronto para coleta.
-                        </div>
-                    )}
+                                <p className="text-slate-400 font-bold italic">Nenhum pedido para retirada</p>
+                            </div>
+                        )}
+                    </div>
                 </section>
 
-                {/* Coluna: Em Trânsito / Minhas Entregas */}
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-status-payment">
-                        <Navigation className="h-5 w-5" />
-                        Em Trânsito
-                    </h2>
-                    {onTheWay.map(order => (
-                        <Card key={order.id} className="border-l-4 border-l-status-payment shadow-sm">
-                            <CardContent className="p-4 space-y-4">
-                                <div className="flex justify-between items-start">
+                {/* Coluna 2: EM ROTA */}
+                <section className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-sm font-black text-[#6366f1] uppercase tracking-widest flex items-center gap-2">
+                            Em Rota (Minhas Entregas)
+                            <Badge className="bg-[#6366f1] hover:bg-[#6366f1] text-white rounded-full h-6 w-6 flex items-center justify-center p-0 text-[10px] border-none">
+                                {onTheWay.length}
+                            </Badge>
+                        </h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        {onTheWay.map(order => (
+                            <Card key={order.id} className="border-none shadow-sm rounded-[32px] overflow-hidden bg-white border-l-8 border-l-[#6366f1]/10">
+                                <CardContent className="p-6 space-y-5">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <Hash className="h-4 w-4 text-slate-300" />
+                                            <span className="text-xl font-black text-slate-800">{order.readable_id}</span>
+                                        </div>
+                                        <Badge className="bg-[#e0e7ff] text-[#6366f1] hover:bg-[#e0e7ff] border-none font-black text-[10px] rounded-lg">
+                                            Em Trânsito
+                                        </Badge>
+                                    </div>
+
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground">{order.readable_id}</span>
-                                        <h3 className="font-bold text-lg">{order.customer?.name || "Cliente Final"}</h3>
+                                        <h3 className="font-black text-slate-700 text-lg mb-1">{order.customer?.name || "Consumidor Final"}</h3>
+                                        <p className="text-sm font-bold text-slate-400 leading-snug">
+                                            {order.delivery_address}
+                                        </p>
                                     </div>
-                                    <Badge className="bg-status-payment">R$ {Number(order.total).toFixed(2)}</Badge>
-                                </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2 text-sm">
-                                        <MapPin className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
-                                        <span className="leading-tight">{order.delivery_address || order.customer?.address}</span>
+                                    <div className="bg-slate-50 p-4 rounded-2xl flex justify-between items-center">
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Total a receber:</span>
+                                        <span className="text-xl font-black text-[#6366f1]">
+                                            R$ {Number(order.total).toFixed(2).replace('.', ',')}
+                                        </span>
                                     </div>
-                                </div>
 
-                                <Button
-                                    className="w-full gap-2 bg-status-free hover:bg-status-free/90"
-                                    onClick={() => handleStatusUpdate(order.id, "Concluído")}
-                                >
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    Confirmar Entrega
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ))}
-                    {onTheWay.length === 0 && (
-                        <div className="text-center py-12 border-2 border-dashed rounded-lg text-muted-foreground text-sm">
-                            Nenhuma entrega em trânsito.
-                        </div>
-                    )}
+                                    <Button
+                                        className="w-full h-14 rounded-2xl bg-[#1e293b] hover:bg-[#0f172a] text-white font-black text-base shadow-xl shadow-slate-200 gap-3"
+                                        onClick={() => handleStatusUpdate(order.id, "Concluído")}
+                                    >
+                                        <CheckCircle2 className="h-5 w-5" />
+                                        Confirmar Entrega
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))}
+                        {onTheWay.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-[32px] border-2 border-dashed border-slate-200">
+                                <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                                    <MapPin className="h-8 w-8 text-slate-200" />
+                                </div>
+                                <p className="text-slate-400 font-bold italic">Você não possui entregas em rota</p>
+                            </div>
+                        )}
+                    </div>
                 </section>
             </div>
         </div>
     );
+}
+
+function Plus(props: any) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+        </svg>
+    )
 }

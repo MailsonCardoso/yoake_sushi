@@ -7,7 +7,7 @@ import {
   Grid3X3,
   Building2,
   Settings,
-  Ticket,
+  Bike,
   UtensilsCrossed,
   Clock3,
   Monitor,
@@ -23,7 +23,7 @@ const navItems = [
   { title: "Cadastros", path: "/registrations", icon: ClipboardList },
   { title: "Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
   { title: "Mesas", path: "/tables", icon: Grid3X3 },
-  { title: "Entregas", path: "/delivery", icon: Ticket },
+  { title: "App do Entregador", path: "/delivery", icon: Bike },
   { title: "Histórico", path: "/history", icon: Clock3 },
   { title: "Monitor TV", path: "/monitor", icon: Monitor },
 ];
