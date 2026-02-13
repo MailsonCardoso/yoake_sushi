@@ -14,8 +14,8 @@ export default function TVMonitor() {
             const res = await axios.get(`${API_URL}/orders?status=active`);
             const allActive = res.data;
 
-            // Filtra para o painel
-            setPreparingOrders(allActive.filter((o: Order) => o.status === "Preparando" || o.status === "Pendente"));
+            // Filtra para o painel: Apenas 'Preparando' (ignora 'Pendente')
+            setPreparingOrders(allActive.filter((o: Order) => o.status === "Preparando"));
             setReadyOrders(allActive.filter((o: Order) => o.status === "Pronto"));
         } catch (error) {
             console.error("Erro ao atualizar monitor:", error);
