@@ -17,10 +17,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Calendar, Filter, FileText, ChevronRight, MapPin } from "lucide-react";
+import { Search, Calendar, Filter, FileText, ChevronRight, MapPin, Bike, Store, Smartphone } from "lucide-react";
 import axios from "axios";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const API_URL = "https://api2.platformx.com.br/api";
 
@@ -30,6 +31,20 @@ const statusMap: Record<string, { label: string; variant: "default" | "secondary
     Pronto: { label: "Pronto", variant: "secondary" },
     Despachado: { label: "Em Trânsito", variant: "default" },
     Concluído: { label: "Concluído", variant: "outline" },
+};
+
+const channelConfig: Record<string, { icon: any; color: string; label: string; prefix: string }> = {
+    iFood: { icon: Bike, color: "text-red-500", label: "iFood", prefix: "IF" },
+    Balcão: { icon: Store, color: "text-slate-600", label: "Balcão", prefix: "PED" },
+    WhatsApp: { icon: Smartphone, color: "text-emerald-500", label: "Delivery", prefix: "WPP" },
+    Outros: { icon: FileText, color: "text-slate-400", label: "Outros", prefix: "PED" },
+};
+
+const getOrderConfig = (order: Order) => {
+    if (order.channel === "iFood") return channelConfig.iFood;
+    if (order.channel === "WhatsApp" || order.type === "delivery") return channelConfig.WhatsApp;
+    if (order.channel === "Balcão") return channelConfig.Balcão;
+    return channelConfig.Outros;
 };
 
 export default function OrderHistory() {
@@ -127,7 +142,9 @@ export default function OrderHistory() {
                                         <FileText className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <p className="font-black text-slate-800">{order.readable_id}</p>
+                                        <p className="font-black text-slate-800">
+                                            #{getOrderConfig(order).prefix}-{order.readable_id.replace(/\D/g, "")}
+                                        </p>
                                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
                                             {format(new Date(order.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                                         </p>
@@ -142,8 +159,14 @@ export default function OrderHistory() {
                                         </p>
                                     </div>
                                     <div className="text-center md:text-left">
-                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Canal</p>
-                                        <Badge variant="outline" className="text-[10px] uppercase font-black">{order.channel}</Badge>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Canal</p>
+                                        <div className={cn("flex items-center gap-2 font-bold", getOrderConfig(order).color)}>
+                                            {(() => {
+                                                const ConfigIcon = getOrderConfig(order).icon;
+                                                return <ConfigIcon className="h-4 w-4" />;
+                                            })()}
+                                            <span className="text-sm">{getOrderConfig(order).label}</span>
+                                        </div>
                                     </div>
                                     <div className="text-center md:text-left">
                                         <p className="text-[10px] text-muted-foreground uppercase font-black">Total</p>
@@ -171,7 +194,9 @@ export default function OrderHistory() {
                             <div className="p-8 pb-4">
                                 <div className="flex justify-between items-start mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-black text-slate-800">{selectedOrder.readable_id}</h2>
+                                        <h2 className="text-2xl font-black text-slate-800">
+                                            #{getOrderConfig(selectedOrder).prefix}-{selectedOrder.readable_id.replace(/\D/g, "")}
+                                        </h2>
                                         <p className="text-xs text-muted-foreground font-bold uppercase mt-1">
                                             {format(new Date(selectedOrder.created_at), "EEEE, dd/MM/yyyy - HH:mm", { locale: ptBR })}
                                         </p>
