@@ -1,0 +1,34 @@
+<?php
+
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RestaurantTableController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+// Produtos
+Route::get('/products', [ProductController::class, 'index']);
+Route::post('/products', [ProductController::class, 'store']);
+Route::put('/products/{id}', [ProductController::class, 'update']);
+
+// Clientes
+Route::get('/customers', [CustomerController::class, 'index']);
+Route::post('/customers', [CustomerController::class, 'store']);
+
+// Mesas
+Route::get('/tables', [RestaurantTableController::class, 'index']);
+Route::patch('/tables/{id}/open', [RestaurantTableController::class, 'open']);
+Route::patch('/tables/{id}/close', [RestaurantTableController::class, 'close']);
+
+// Pedidos (POS & KDS)
+Route::get('/orders', [OrderController::class, 'index']);
+Route::post('/orders', [OrderController::class, 'store']);
+Route::get('/orders/{id}', [OrderController::class, 'show']);
+Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
