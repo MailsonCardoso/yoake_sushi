@@ -208,27 +208,37 @@ export default function Sales() {
 
       {/* Right: Cart Sidebar */}
       <div className="w-[400px] border-l border-slate-200 bg-white flex flex-col shadow-2xl z-20">
-        {/* Order Type Toggle */}
+        {/* Order Type Filter (4 Options) */}
         <div className="p-6">
-          <div className="bg-slate-100 p-1 rounded-2xl flex gap-1">
-            <button
-              onClick={() => setOrderType("counter")}
-              className={cn(
-                "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
-                (orderType === "counter" || orderType === "delivery") ? "bg-white text-[#6366f1] shadow-sm" : "text-slate-500"
-              )}
-            >
-              Balcão/Delivery
-            </button>
-            <button
-              onClick={() => setOrderType("table")}
-              className={cn(
-                "flex-1 py-3 rounded-xl text-sm font-bold transition-all",
-                orderType === "table" ? "bg-white text-[#6366f1] shadow-sm" : "text-slate-500"
-              )}
-            >
-              Mesa
-            </button>
+          <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 flex-wrap">
+            {[
+              { id: "ifood", label: "IFOOD", type: "delivery", channel: "iFood" },
+              { id: "balcao", label: "BALCÃO", type: "counter", channel: "Balcão" },
+              { id: "mesa", label: "MESA", type: "table", channel: "Balcão" },
+              { id: "delivery", label: "DELIVERY", type: "delivery", channel: "WhatsApp" },
+            ].map((opt) => {
+              const isActive =
+                (opt.id === "ifood" && orderChannel === "iFood" && orderType === "delivery") ||
+                (opt.id === "balcao" && orderType === "counter") ||
+                (opt.id === "mesa" && orderType === "table") ||
+                (opt.id === "delivery" && orderType === "delivery" && orderChannel !== "iFood");
+
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setOrderType(opt.type as any);
+                    setOrderChannel(opt.channel);
+                  }}
+                  className={cn(
+                    "flex-1 py-3 px-2 rounded-xl text-[10px] font-black transition-all",
+                    isActive ? "bg-white text-[#6366f1] shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/50"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -287,20 +297,9 @@ export default function Sales() {
           )}
 
           <div className="flex gap-2 pt-2">
-            <Select value={orderChannel} onValueChange={setOrderChannel}>
-              <SelectTrigger className="flex-1 h-9 rounded-xl border-slate-200 text-xs font-bold text-slate-500">
-                <SelectValue placeholder="Canal" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Balcão">Balcão</SelectItem>
-                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                <SelectItem value="iFood">iFood</SelectItem>
-                <SelectItem value="Outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
             {orderType === "delivery" && (
-              <Badge variant="outline" className="h-9 px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
-                Taxa: R$ {deliveryFee.toFixed(2)}
+              <Badge variant="outline" className="h-9 w-full justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
+                Taxa de Entrega: R$ {deliveryFee.toFixed(2)}
               </Badge>
             )}
           </div>
