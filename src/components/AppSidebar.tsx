@@ -9,6 +9,7 @@ import {
   Settings,
   Ticket,
   UtensilsCrossed,
+  Clock3,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const navItems = [
   { title: "Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
   { title: "Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Entregas", path: "/delivery", icon: Ticket },
+  { title: "Histórico", path: "/history", icon: Clock3 },
 ];
 
 export function AppSidebar() {
