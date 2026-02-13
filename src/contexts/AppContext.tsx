@@ -109,10 +109,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchData();
-    // Poll for changes every 30 seconds for KDS
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchData();
+      // Poll for changes every 30 seconds for KDS
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const addOrder = async (orderData: any) => {
