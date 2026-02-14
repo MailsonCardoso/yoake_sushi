@@ -120,6 +120,7 @@ export default function Sales() {
 
   const simulateDistance = () => {
     let dist = 0;
+    const TORTUOSITY_FACTOR = 1.3; // Adiciona 30% para compensar curvas e ruas (Caminho Justo)
 
     if (customerLatLng.lat && customerLatLng.lng && settings.company_lat && settings.company_lng) {
       // Real calculation
@@ -132,11 +133,21 @@ export default function Sales() {
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      dist = Math.round((R * c) * 10) / 10;
+
+      // Apply Tortuosity Factor
+      dist = (R * c) * TORTUOSITY_FACTOR;
+      dist = Math.round(dist * 10) / 10; // Arredonda para 1 casa decimal
     } else {
-      // Fallback to simulation
-      dist = Math.round((Math.random() * 10 + 1) * 10) / 10;
-      toast({ title: "Modo Simulação", description: "Lat/Lng não encontradas. Usando distância simulada." });
+      // No coordinates found
+      toast({
+        title: "Localização não detectada",
+        description: "Impossível calcular rota automática. Por favor, insira a taxa manualmente.",
+        variant: "destructive"
+      });
+      setCalculatedDistance(0);
+      setDeliveryFee(0);
+      setShowDistanceCalc(false);
+      return;
     }
 
     const feePerKm = Number(settings.delivery_fee_per_km || 2);
@@ -145,7 +156,7 @@ export default function Sales() {
     setCalculatedDistance(dist);
     setDeliveryFee(finalFee);
     setShowDistanceCalc(false);
-    toast({ title: "Entrega Calculada", description: `${dist} km → Taxa: R$ ${finalFee.toFixed(2)}` });
+    toast({ title: "Entrega Calculada (Modo Justo)", description: `${dist} km (com margem) → Taxa: R$ ${finalFee.toFixed(2)}` });
   };
 
   const handleSendOrder = () => {
@@ -331,9 +342,22 @@ export default function Sales() {
 
           <div className="flex gap-2 pt-2">
             {orderType === "delivery" && (
-              <Badge variant="outline" className="h-9 w-full justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
-                Taxa de Entrega: R$ {deliveryFee.toFixed(2)}
-              </Badge>
+              <div className="flex items-center gap-2 w-full pt-2">
+                <Badge variant="outline" className="h-10 shrink-0 justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
+                  Taxa Entrega
+                </Badge>
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-3 text-xs font-bold text-slate-500">R$</span>
+                  <Input
+                    type="number"
+                    step="1.00"
+                    className="pl-8 h-10 rounded-xl bg-white border-indigo-100 text-indigo-700 font-black text-sm shadow-sm focus:ring-indigo-500"
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(Number(e.target.value))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
             )}
           </div>
         </div>
