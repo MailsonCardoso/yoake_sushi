@@ -29,7 +29,9 @@ class CustomerController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
-            'maps_link' => 'nullable|string',
+            'location_link' => 'nullable|string',
+            'lat' => 'nullable|string',
+            'lng' => 'nullable|string',
         ]);
 
         return Customer::create($validated);

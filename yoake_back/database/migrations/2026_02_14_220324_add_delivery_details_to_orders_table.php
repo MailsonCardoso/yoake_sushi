@@ -10,9 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->string('lat')->nullable()->after('location_link');
-            $table->string('lng')->nullable()->after('lat');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('delivery_location_link')->nullable()->after('delivery_address');
+            $table->decimal('distance_km', 8, 2)->nullable()->after('delivery_fee');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn(['lat', 'lng']);
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn(['delivery_location_link', 'distance_km']);
         });
     }
 };

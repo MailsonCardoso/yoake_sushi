@@ -14,7 +14,9 @@ class Customer extends Model
         'name',
         'phone',
         'address',
-        'maps_link',
+        'location_link',
+        'lat',
+        'lng',
         'last_order_date',
     ];
 

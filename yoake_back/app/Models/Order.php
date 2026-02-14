@@ -19,8 +19,10 @@ class Order extends Model
         'status',
         'payment_method',
         'delivery_address',
+        'delivery_location_link',
         'subtotal',
         'delivery_fee',
+        'distance_km',
         'total',
     ];
 

@@ -263,8 +263,54 @@ export default function Registrations() {
               <Input value={customerForm.address} onChange={(e) => setCustomerForm((p) => ({ ...p, address: e.target.value }))} />
             </div>
             <div>
-              <Label>Link do Google Maps</Label>
-              <Input value={customerForm.location_link} onChange={(e) => setCustomerForm((p) => ({ ...p, location_link: e.target.value }))} placeholder="https://maps.google.com/..." />
+              <Label>Link do Google Maps (WhatsApp)</Label>
+              <Input
+                value={customerForm.location_link}
+                onChange={(e) => {
+                  const link = e.target.value;
+                  setCustomerForm(p => ({ ...p, location_link: link }));
+
+                  // Auto-extract Lat/Lng from Google Maps Links
+                  // Formats: 
+                  // 1. @-2.5314079,-44.1695986,
+                  // 2. ?q=-2.5314079,-44.1695986
+                  // 3. /search/-2.5314079,-44.1695986
+
+                  try {
+                    const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+                    const match = link.match(regex);
+
+                    if (match) {
+                      setCustomerForm(p => ({
+                        ...p,
+                        location_link: link,
+                        lat: match[1],
+                        lng: match[2]
+                      }));
+                      toast({ title: "Localização Detectada!", description: `Lat: ${match[1]}, Lng: ${match[2]}` });
+                    } else {
+                      // Try fallback for ?q=
+                      const qRegex = /q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+                      const qMatch = link.match(qRegex);
+                      if (qMatch) {
+                        setCustomerForm(p => ({
+                          ...p,
+                          location_link: link,
+                          lat: qMatch[1],
+                          lng: qMatch[2]
+                        }));
+                        toast({ title: "Localização Detectada!", description: `Lat: ${qMatch[1]}, Lng: ${qMatch[2]}` });
+                      }
+                    }
+                  } catch (e) {
+                    console.log("Erro ao extrair coordenadas", e);
+                  }
+                }}
+                placeholder="Cole o link aqui (ex: https://maps.google.com/...)"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Cole o link de localização do WhatsApp aqui para preencher Lat/Lng automaticamente.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
