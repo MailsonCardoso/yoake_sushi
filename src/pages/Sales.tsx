@@ -154,14 +154,6 @@ export default function Sales() {
       dist = Math.round(dist * 10) / 10; // Arredonda para 1 casa decimal
     } else {
       // No coordinates found
-      toast({
-        title: "Localização não detectada",
-        description: "Impossível calcular rota automática. Por favor, insira a taxa manualmente.",
-        variant: "destructive"
-      });
-      setCalculatedDistance(0);
-      setDeliveryFee(0);
-      setShowDistanceCalc(false);
       return;
     }
 
@@ -319,7 +311,7 @@ export default function Sales() {
             <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Buscar Cliente (Nome ou Celular)..."
-              className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
+              className="pl-11 pr-10 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -328,6 +320,22 @@ export default function Sales() {
               }}
               onFocus={() => setShowCustomerDropdown(true)}
             />
+            {searchTerm && (
+              <button
+                className="absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCustomerName("");
+                  setCustomerId("");
+                  setDeliveryAddress("");
+                  setDeliveryLocationLink("");
+                  setCustomerLatLng({});
+                  setDeliveryFee(0);
+                }}
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            )}
 
             {showCustomerDropdown && filteredCustomers.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
