@@ -5,6 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 const API_URL = "https://api2.platformx.com.br/api";
 
 // Configuração global do Axios
+axios.defaults.baseURL = API_URL;
+axios.defaults.headers.common["Accept"] = "application/json";
+axios.defaults.headers.common["Content-Type"] = "application/json";
+
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {

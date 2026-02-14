@@ -95,8 +95,14 @@ export default function Registrations() {
       toast({ title: "Cadastro processado!" });
       fetchData();
       setShowCustomerModal(false);
-    } catch (error) {
-      toast({ title: "Erro ao cadastrar", variant: "destructive" });
+    } catch (error: any) {
+      console.error(error);
+      const errorMessage = error.response?.data?.message || "Erro desconhecido ao cadastrar cliente.";
+      toast({
+        title: "Erro ao cadastrar",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
