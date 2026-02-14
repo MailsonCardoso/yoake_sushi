@@ -31,8 +31,27 @@ class Order extends Model
         parent::boot();
         static::creating(function ($model) {
             $lastOrder = static::orderBy('created_at', 'desc')->first();
-            $nextNumber = $lastOrder ? (int) str_replace('#PED-', '', $lastOrder->readable_id) + 1 : 1001;
-            $model->readable_id = '#PED-' . $nextNumber;
+
+            // Extração de número robusta (pega qualquer coisa após o primeiro hífen -)
+            $lastNumber = 1000;
+            if ($lastOrder && preg_match('/-(\d+)$/', $lastOrder->readable_id, $matches)) {
+                $lastNumber = (int) $matches[1];
+            }
+            $nextNumber = $lastNumber + 1;
+
+            // Lógica de Prefixos sugerida pelo usuário
+            $prefix = '#PED'; // Padrão Balcão
+
+            if ($model->channel === 'iFood') {
+                $prefix = '#IF';
+            } elseif ($model->type === 'mesa') {
+                $prefix = '#MES';
+            } elseif ($model->type === 'delivery') {
+                $prefix = '#WPP';
+                // Se for delivery mas o canal for iFood, o IF ganha a prioridade acima
+            }
+
+            $model->readable_id = $prefix . '-' . $nextNumber;
         });
     }
 
