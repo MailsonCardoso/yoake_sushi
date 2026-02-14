@@ -36,7 +36,7 @@ export default function Settings() {
     const [users, setUsers] = useState<User[]>([]);
     const [settings, setSettings] = useState<Record<string, string>>({
         company_name: "Yoake Sushi",
-        company_address: "",
+        company_link: "",
         company_lat: "",
         company_lng: "",
         delivery_fee_per_km: "2.00"
@@ -108,10 +108,19 @@ export default function Settings() {
     const handleSaveSettings = async () => {
         try {
             setLoading(true);
-            await axios.post(`${API_URL}/settings`, settings);
+            // Limpa qualquer valor que não seja string antes de enviar
+            const cleanSettings = Object.fromEntries(
+                Object.entries(settings).filter(([_, v]) => v !== null && v !== undefined)
+            );
+            await axios.post(`${API_URL}/settings`, cleanSettings);
             toast({ title: "Configurações salvas!" });
-        } catch (error) {
-            toast({ title: "Erro ao salvar", variant: "destructive" });
+        } catch (error: any) {
+            console.error("Erro ao salvar:", error.response?.data || error.message);
+            toast({
+                title: "Erro ao salvar",
+                description: "Ocorreu um problema no servidor. Tente novamente.",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }
@@ -208,38 +217,27 @@ export default function Settings() {
                                         <Input
                                             value={settings.company_link || ""}
                                             onChange={e => handleLinkChange(e.target.value)}
-                                            className="pl-11 h-12 rounded-2xl bg-indigo-50/50 border-indigo-100 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold placeholder:text-slate-300"
-                                            placeholder="Cole o link da sua localização aqui para preencher Lat/Lng..."
+                                            className="pl-11 h-12 rounded-2xl bg-indigo-50/50 border-indigo-100 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold placeholder:text-slate-300 border-2"
+                                            placeholder="Cole o link da sua localização aqui..."
                                         />
                                     </div>
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Endereço de Exibição</Label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-300" />
-                                        <Input
-                                            value={settings.company_address}
-                                            onChange={e => setSettings({ ...settings, company_address: e.target.value })}
-                                            className="pl-11 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold"
-                                            placeholder="Ex: Rua das Flores, 123, Centro - SP"
-                                        />
-                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold ml-2">As coordenadas abaixo são atualizadas automaticamente ao colar o link.</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Latitude</Label>
+                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Latitude Detectada</Label>
                                     <Input
                                         value={settings.company_lat}
-                                        onChange={e => setSettings({ ...settings, company_lat: e.target.value })}
-                                        className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold"
+                                        readOnly
+                                        className="h-12 rounded-2xl bg-slate-100 border-transparent font-black text-slate-500 cursor-not-allowed"
                                         placeholder="-23.550520"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Longitude</Label>
+                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Longitude Detectada</Label>
                                     <Input
                                         value={settings.company_lng}
-                                        onChange={e => setSettings({ ...settings, company_lng: e.target.value })}
-                                        className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold"
+                                        readOnly
+                                        className="h-12 rounded-2xl bg-slate-100 border-transparent font-black text-slate-500 cursor-not-allowed"
                                         placeholder="-46.633308"
                                     />
                                 </div>
