@@ -104,18 +104,55 @@ export default function Sales() {
     );
   };
 
+  const extractLatLngFromLink = (link: string) => {
+    try {
+      const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+      const qRegex = /q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+
+      const match = link.match(regex) || link.match(qRegex);
+      if (match) {
+        return { lat: match[1], lng: match[2] };
+      }
+    } catch (e) {
+      console.log("Erro ao extrair coordenadas", e);
+    }
+    return null;
+  };
+
   const handleCustomerSelect = (customer: any) => {
     setCustomerName(customer.name);
     setSearchTerm(customer.name);
     setCustomerId(customer.id);
-    setDeliveryAddress(customer.address || "");
-    setDeliveryLocationLink(customer.location_link || "");
-    setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
-    setShowCustomerDropdown(false);
 
-    // Se tiver coordenadas, já tenta calcular automaticamente
+    // PRIORIDADE: Se não tiver endereço de texto, usa o Link
+    const displayAddress = customer.address || customer.location_link || "";
+    setDeliveryAddress(displayAddress);
+    setDeliveryLocationLink(customer.location_link || "");
+
+    // Se o cliente já tem lat/lng, usa. Se não, tenta extrair do link agora.
     if (customer.lat && customer.lng) {
-      toast({ title: "Localização carregada", description: "Calculando taxa de entrega..." });
+      setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
+    } else if (customer.location_link) {
+      const coords = extractLatLngFromLink(customer.location_link);
+      if (coords) {
+        setCustomerLatLng(coords);
+      }
+    }
+
+    setShowCustomerDropdown(false);
+  };
+
+  const handleAddressChange = (val: string) => {
+    setDeliveryAddress(val);
+
+    // Se colarem um link direto no campo de endereço da venda
+    if (val.includes("maps.google.com") || val.includes("goo.gl/maps")) {
+      setDeliveryLocationLink(val);
+      const coords = extractLatLngFromLink(val);
+      if (coords) {
+        setCustomerLatLng(coords);
+        toast({ title: "Link Detectado!", description: "Coordenadas extraídas com sucesso." });
+      }
     }
   };
 
@@ -377,10 +414,10 @@ export default function Sales() {
               <div className="relative flex-1">
                 <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Endereço Entrega (Obrigatório)..."
+                  placeholder="Endereço ou Link do Maps (Obrigatório)..."
                   className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm border-red-100"
                   value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  onChange={(e) => handleAddressChange(e.target.value)}
                 />
               </div>
               <Button
