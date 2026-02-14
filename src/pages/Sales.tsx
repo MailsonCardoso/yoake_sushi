@@ -105,13 +105,22 @@ export default function Sales() {
   };
 
   const extractLatLngFromLink = (link: string) => {
+    if (!link) return null;
     try {
-      const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
-      const qRegex = /q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+      // Formatos suportados: @lat,lng | q=lat,lng | search/lat,lng | ll=lat,lng
+      const patterns = [
+        /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+        /q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+        /search\/(-?\d+\.\d+),(-?\d+\.\d+)/,
+        /ll=(-?\d+\.\d+),(-?\d+\.\d+)/
+      ];
 
-      const match = link.match(regex) || link.match(qRegex);
-      if (match) {
-        return { lat: match[1], lng: match[2] };
+      for (const pattern of patterns) {
+        const match = link.match(pattern);
+        if (match) {
+          console.log("Coordenadas extraídas via regex:", match[1], match[2]);
+          return { lat: match[1], lng: match[2] };
+        }
       }
     } catch (e) {
       console.log("Erro ao extrair coordenadas", e);
@@ -120,6 +129,7 @@ export default function Sales() {
   };
 
   const handleCustomerSelect = (customer: any) => {
+    console.log("Cliente selecionado:", customer.name);
     setCustomerName(customer.name);
     setSearchTerm(customer.name);
     setCustomerId(customer.id);
@@ -137,6 +147,8 @@ export default function Sales() {
       if (coords) {
         setCustomerLatLng(coords);
       }
+    } else {
+      setCustomerLatLng({});
     }
 
     setShowCustomerDropdown(false);
@@ -145,8 +157,8 @@ export default function Sales() {
   const handleAddressChange = (val: string) => {
     setDeliveryAddress(val);
 
-    // Se colarem um link direto no campo de endereço da venda
-    if (val.includes("maps.google.com") || val.includes("goo.gl/maps")) {
+    // Se colarem um link do Google Maps
+    if (val.includes("google.com/maps") || val.includes("goo.gl/maps") || val.includes("maps.app.goo.gl")) {
       setDeliveryLocationLink(val);
       const coords = extractLatLngFromLink(val);
       if (coords) {
@@ -164,6 +176,8 @@ export default function Sales() {
       console.log("Auto-calculating distance...");
       toast({ title: "Calculando Entrega", description: "Coordenadas detectadas, calculando distância e taxa." });
       simulateDistance();
+    } else if (orderType === "delivery" && hasCoords && !hasCompany) {
+      toast({ title: "Coordenadas da Empresa Ausentes", description: "Por favor, configure as coordenadas da sua empresa nas configurações para calcular a entrega.", variant: "destructive" });
     }
   }, [customerLatLng, orderType, settings.company_lat, settings.company_lng]);
 
@@ -176,36 +190,47 @@ export default function Sales() {
   }, [customers, searchTerm]);
 
   const simulateDistance = () => {
-    let dist = 0;
-    const TORTUOSITY_FACTOR = 1.3; // Adiciona 30% para compensar curvas e ruas (Caminho Justo)
+    const TORTUOSITY_FACTOR = 1.3;
 
-    if (customerLatLng.lat && customerLatLng.lng && settings.company_lat && settings.company_lng) {
-      // Real calculation
+    let lat = customerLatLng.lat;
+    let lng = customerLatLng.lng;
+
+    // Fallback: tenta extrair do endereço se os estados estiverem vazios
+    if (!lat || !lng) {
+      const extracted = extractLatLngFromLink(deliveryAddress);
+      if (extracted) {
+        lat = extracted.lat;
+        lng = extracted.lng;
+      }
+    }
+
+    if (lat && lng && settings.company_lat && settings.company_lng) {
       const lat1 = Number(settings.company_lat);
       const lon1 = Number(settings.company_lng);
-      const lat2 = Number(customerLatLng.lat);
-      const lon2 = Number(customerLatLng.lng);
+      const lat2 = Number(lat);
+      const lon2 = Number(lng);
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-      // Apply Tortuosity Factor
-      dist = (R * c) * TORTUOSITY_FACTOR;
-      dist = Math.round(dist * 10) / 10; // Arredonda para 1 casa decimal
+      let dist = (R * c) * TORTUOSITY_FACTOR;
+      dist = Math.round(dist * 10) / 10;
+
+      const feePerKm = Number(settings.delivery_fee_per_km || 2);
+      const finalFee = Math.round(dist * feePerKm * 100) / 100;
+
+      setCalculatedDistance(dist);
+      setDeliveryFee(finalFee);
+      toast({ title: "Entrega Calculada", description: `${dist} km → R$ ${finalFee.toFixed(2)}` });
     } else {
-      // No coordinates found
-      return;
+      console.warn("Calculo impossível. Faltando dados:", {
+        cliente: { lat, lng },
+        empresa: { lat: settings.company_lat, lng: settings.company_lng }
+      });
+      // Importante: Se for zero, não dar toast de erro toda hora no useEffect
     }
-
-    const feePerKm = Number(settings.delivery_fee_per_km || 2);
-    const finalFee = Math.round(dist * feePerKm * 100) / 100;
-
-    setCalculatedDistance(dist);
-    setDeliveryFee(finalFee);
-    setShowDistanceCalc(false);
-    toast({ title: "Entrega Calculada (Modo Justo)", description: `${dist} km (com margem) → Taxa: R$ ${finalFee.toFixed(2)}` });
   };
 
   const handleSendOrder = () => {
