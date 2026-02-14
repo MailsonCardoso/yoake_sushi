@@ -60,6 +60,8 @@ export default function Sales() {
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [showDistanceCalc, setShowDistanceCalc] = useState(false);
   const [calculatedDistance, setCalculatedDistance] = useState(0);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (location.state?.tableId) {
@@ -102,21 +104,23 @@ export default function Sales() {
     );
   };
 
-  const handleCustomerSelect = (name: string) => {
-    setCustomerName(name);
-    const customer = customers.find((c) => c.name === name);
-    if (customer) {
-      setCustomerId(customer.id);
-      setDeliveryAddress(customer.address);
-      setDeliveryLocationLink(customer.location_link || "");
-      setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
-    } else {
-      setCustomerId("");
-      setDeliveryAddress("");
-      setDeliveryLocationLink("");
-      setCustomerLatLng({});
-    }
+  const handleCustomerSelect = (customer: any) => {
+    setCustomerName(customer.name);
+    setSearchTerm(customer.name);
+    setCustomerId(customer.id);
+    setDeliveryAddress(customer.address);
+    setDeliveryLocationLink(customer.location_link || "");
+    setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
+    setShowCustomerDropdown(false);
   };
+
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm) return [];
+    return customers.filter(c =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.phone.includes(searchTerm)
+    ).slice(0, 5); // Limit result to avoid overflow
+  }, [customers, searchTerm]);
 
   const simulateDistance = () => {
     let dist = 0;
@@ -196,6 +200,7 @@ export default function Sales() {
 
     setCart([]);
     setCustomerName("");
+    setSearchTerm("");
     setCustomerId("");
     setDeliveryAddress("");
     setDeliveryLocationLink("");
@@ -302,17 +307,46 @@ export default function Sales() {
           <div className="relative">
             <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Nome do Cliente..."
+              placeholder="Buscar Cliente (Nome ou Celular)..."
               className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
-              value={customerName}
-              onChange={(e) => handleCustomerSelect(e.target.value)}
-              list="customers-list"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCustomerName(e.target.value);
+                setShowCustomerDropdown(true);
+              }}
+              onFocus={() => setShowCustomerDropdown(true)}
             />
-            <datalist id="customers-list">
-              {customers.map((c) => (
-                <option key={c.id} value={c.name} />
-              ))}
-            </datalist>
+
+            {showCustomerDropdown && filteredCustomers.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                {filteredCustomers.map((c) => (
+                  <button
+                    key={c.id}
+                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors flex flex-col border-b border-slate-50 last:border-0"
+                    onClick={() => handleCustomerSelect(c)}
+                  >
+                    <span className="font-black text-sm text-slate-800">{c.name}</span>
+                    <span className="text-[10px] text-[#6366f1] font-bold">{c.phone}</span>
+                    <span className="text-[10px] text-slate-400 truncate">{c.address}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showCustomerDropdown && searchTerm && filteredCustomers.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-4 text-center">
+                <p className="text-xs text-slate-400 font-bold">Nenhum cliente encontrado</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 text-[10px] text-indigo-600 font-black h-7"
+                  onClick={() => setShowCustomerDropdown(false)}
+                >
+                  Cadastrar como novo
+                </Button>
+              </div>
+            )}
           </div>
 
           {(orderType === "delivery" && orderChannel !== "iFood") ? (

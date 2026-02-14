@@ -36,4 +36,28 @@ class CustomerController extends Controller
 
         return Customer::create($validated);
     }
+
+    public function update(Request $request, $id)
+    {
+        $customer = Customer::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'location_link' => 'nullable|string',
+            'lat' => 'nullable|string',
+            'lng' => 'nullable|string',
+        ]);
+
+        $customer->update($validated);
+        return $customer;
+    }
+
+    public function destroy($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->delete();
+        return response()->json(['message' => 'Cliente excluído com sucesso']);
+    }
 }

@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity } from "lucide-react";
+import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity, Trash2 } from "lucide-react";
 import axios from "axios";
 
 export default function Registrations() {
@@ -91,8 +91,13 @@ export default function Registrations() {
   const saveCustomer = async () => {
     if (!customerForm.name) return;
     try {
-      await axios.post(`https://api2.platformx.com.br/api/customers`, customerForm);
-      toast({ title: "Cadastro processado!" });
+      if (editingCustomer) {
+        await axios.put(`https://api2.platformx.com.br/api/customers/${editingCustomer.id}`, customerForm);
+        toast({ title: "Cadastro atualizado!" });
+      } else {
+        await axios.post(`https://api2.platformx.com.br/api/customers`, customerForm);
+        toast({ title: "Cliente cadastrado!" });
+      }
       fetchData();
       setShowCustomerModal(false);
     } catch (error: any) {
@@ -103,6 +108,17 @@ export default function Registrations() {
         description: errorMessage,
         variant: "destructive"
       });
+    }
+  };
+
+  const deleteCustomer = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+    try {
+      await axios.delete(`https://api2.platformx.com.br/api/customers/${id}`);
+      toast({ title: "Cliente excluído!" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Erro ao excluir cliente", variant: "destructive" });
     }
   };
 
@@ -199,6 +215,9 @@ export default function Registrations() {
                       )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCustomerModal(customer)}>
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => deleteCustomer(customer.id)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
