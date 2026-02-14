@@ -33,6 +33,8 @@ export default function Registrations() {
   const [productForm, setProductForm] = useState({ name: "", price: "", category: "burgers", description: "" });
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "", lat: "", lng: "" });
 
@@ -111,12 +113,19 @@ export default function Registrations() {
     }
   };
 
-  const deleteCustomer = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+  const deleteCustomer = (id: string) => {
+    setCustomerToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
     try {
-      await axios.delete(`https://api2.platformx.com.br/api/customers/${id}`);
+      await axios.delete(`https://api2.platformx.com.br/api/customers/${customerToDelete}`);
       toast({ title: "Cliente excluído!" });
       fetchData();
+      setShowDeleteConfirm(false);
+      setCustomerToDelete(null);
     } catch (error) {
       toast({ title: "Erro ao excluir cliente", variant: "destructive" });
     }
@@ -374,6 +383,31 @@ export default function Registrations() {
           <DialogFooter>
             <Button variant="outline" className="flex-1" onClick={() => setShowCustomerModal(false)}>Cancelar</Button>
             <Button className="flex-1" onClick={saveCustomer}>Finalizar Cadastro</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Confirmar Exclusão
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} className="flex-1">
+              Excluir permanentemente
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
