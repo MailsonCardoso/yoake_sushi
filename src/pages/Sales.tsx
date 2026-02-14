@@ -108,11 +108,22 @@ export default function Sales() {
     setCustomerName(customer.name);
     setSearchTerm(customer.name);
     setCustomerId(customer.id);
-    setDeliveryAddress(customer.address);
+    setDeliveryAddress(customer.address || "");
     setDeliveryLocationLink(customer.location_link || "");
     setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
     setShowCustomerDropdown(false);
+
+    // Se tiver coordenadas, já tenta calcular automaticamente
+    if (customer.lat && customer.lng) {
+      toast({ title: "Localização carregada", description: "Calculando taxa de entrega..." });
+    }
   };
+
+  useEffect(() => {
+    if (orderType === "delivery" && customerLatLng.lat && customerLatLng.lng && settings.company_lat) {
+      simulateDistance();
+    }
+  }, [customerLatLng, orderType]);
 
   const filteredCustomers = useMemo(() => {
     if (!searchTerm) return [];
@@ -320,16 +331,20 @@ export default function Sales() {
 
             {showCustomerDropdown && filteredCustomers.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
-                {filteredCustomers.map((c) => (
-                  <button
-                    key={c.id}
-                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors flex flex-col border-b border-slate-50 last:border-0"
-                    onClick={() => handleCustomerSelect(c)}
+                {filteredCustomers.map((c, idx) => (
+                  <div
+                    key={`${c.id}-${idx}`}
+                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col border-b border-slate-50 last:border-0"
+                    onMouseDown={() => handleCustomerSelect(c)}
                   >
-                    <span className="font-black text-sm text-slate-800">{c.name}</span>
-                    <span className="text-[10px] text-[#6366f1] font-bold">{c.phone}</span>
-                    <span className="text-[10px] text-slate-400 truncate">{c.address}</span>
-                  </button>
+                    <div className="flex justify-between items-center mb-0.5">
+                      <span className="font-black text-sm text-slate-800">{c.name}</span>
+                      <span className="text-[10px] text-[#6366f1] font-black">{c.phone || "Sem Telefone"}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                      <MapPin className="h-2 w-2" /> {c.address || "Sem endereço cadastrado"}
+                    </span>
+                  </div>
                 ))}
               </div>
             )}
