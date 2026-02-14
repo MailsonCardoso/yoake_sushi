@@ -55,6 +55,7 @@ export default function Sales() {
   const [customerName, setCustomerName] = useState("");
   const [customerId, setCustomerId] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLocationLink, setDeliveryLocationLink] = useState("");
   const [customerLatLng, setCustomerLatLng] = useState<{ lat?: string, lng?: string }>({});
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [showDistanceCalc, setShowDistanceCalc] = useState(false);
@@ -107,9 +108,12 @@ export default function Sales() {
     if (customer) {
       setCustomerId(customer.id);
       setDeliveryAddress(customer.address);
+      setDeliveryLocationLink(customer.location_link || "");
       setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
     } else {
       setCustomerId("");
+      setDeliveryAddress("");
+      setDeliveryLocationLink("");
       setCustomerLatLng({});
     }
   };
@@ -167,14 +171,18 @@ export default function Sales() {
       table_id: orderType === "table" ? selectedTable : undefined,
       customer_id: customerId || undefined,
       delivery_address: (orderType === "delivery" || orderType === "counter") ? deliveryAddress : undefined,
+      delivery_location_link: (orderType === "delivery") ? deliveryLocationLink : undefined,
       delivery_fee: orderType === "delivery" ? deliveryFee : 0,
+      distance_km: orderType === "delivery" ? calculatedDistance : 0,
     });
 
     setCart([]);
     setCustomerName("");
     setCustomerId("");
     setDeliveryAddress("");
+    setDeliveryLocationLink("");
     setDeliveryFee(0);
+    setCalculatedDistance(0);
     setSelectedTable("");
   };
 
