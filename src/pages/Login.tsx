@@ -22,6 +22,11 @@ export default function Login() {
             const response = await axios.post("https://api2.platformx.com.br/api/login", {
                 email,
                 password,
+            }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
             });
 
             const { access_token } = response.data;
