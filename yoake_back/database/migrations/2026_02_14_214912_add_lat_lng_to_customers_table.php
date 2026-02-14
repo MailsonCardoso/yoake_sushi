@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::table('customers', function (Blueprint $table) {
             if (!Schema::hasColumn('customers', 'location_link')) {
-                $table->string('location_link')->nullable()->after('address');
+                $table->text('location_link')->nullable()->after('address');
             }
             if (!Schema::hasColumn('customers', 'lat')) {
                 $table->string('lat')->nullable()->after('location_link');
