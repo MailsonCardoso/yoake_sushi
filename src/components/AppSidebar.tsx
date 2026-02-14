@@ -13,6 +13,7 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,18 @@ export function AppSidebar() {
           );
         })}
       </nav>
+
+      {/* Logout button */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }}
+        className="flex items-center gap-3 px-5 py-4 border-t border-sidebar-border hover:bg-red-500/10 hover:text-red-500 transition-colors text-sidebar-foreground group"
+      >
+        <LogOut className="h-5 w-5 shrink-0 group-hover:scale-110 transition-transform" />
+        {!collapsed && <span className="font-bold">Sair do Sistema</span>}
+      </button>
 
       {/* Collapse toggle */}
       <button
