@@ -64,6 +64,42 @@ export default function Settings() {
         }
     };
 
+    const extractLatLngFromLink = (link: string) => {
+        if (!link) return null;
+        try {
+            const patterns = [
+                /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+                /q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+                /search\/(-?\d+\.\d+),(-?\d+\.\d+)/,
+                /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+                /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/ // Novo padrão comum em URLs do Maps
+            ];
+            for (const pattern of patterns) {
+                const match = link.match(pattern);
+                if (match) return { lat: match[1], lng: match[2] };
+            }
+        } catch (e) {
+            console.error("Erro ao extrair coordenadas", e);
+        }
+        return null;
+    };
+
+    const handleLinkChange = (link: string) => {
+        setSettings(prev => ({ ...prev, company_link: link }));
+        const coords = extractLatLngFromLink(link);
+        if (coords) {
+            setSettings(prev => ({
+                ...prev,
+                company_lat: coords.lat,
+                company_lng: coords.lng
+            }));
+            toast({
+                title: "Localização Detectada!",
+                description: "Latitude e Longitude da empresa foram atualizadas."
+            });
+        }
+    };
+
     useEffect(() => {
         fetchSettings();
         fetchUsers();
@@ -166,7 +202,19 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Endereço Completo</Label>
+                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Link Google Maps da Empresa (WhatsApp)</Label>
+                                    <div className="relative">
+                                        <Navigation2 className="absolute left-4 top-3.5 h-4 w-4 text-[#6366f1]" />
+                                        <Input
+                                            value={settings.company_link || ""}
+                                            onChange={e => handleLinkChange(e.target.value)}
+                                            className="pl-11 h-12 rounded-2xl bg-indigo-50/50 border-indigo-100 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all font-bold placeholder:text-slate-300"
+                                            placeholder="Cole o link da sua localização aqui para preencher Lat/Lng..."
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-xs font-black uppercase text-slate-400 tracking-wider">Endereço de Exibição</Label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-300" />
                                         <Input
