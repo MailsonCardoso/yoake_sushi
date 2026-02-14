@@ -46,7 +46,10 @@ export default function Settings() {
 
     const fetchSettings = async () => {
         try {
-            const res = await axios.get(`${API_URL}/settings`);
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`${API_URL}/settings`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+            });
             if (Object.keys(res.data).length > 0) {
                 setSettings(prev => ({ ...prev, ...res.data }));
             }
@@ -57,7 +60,15 @@ export default function Settings() {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get(`${API_URL}/users`);
+            const token = localStorage.getItem("token");
+            // Set global Authorization header for subsequent requests if not already set
+            if (token && !axios.defaults.headers.common["Authorization"]) {
+                axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+                axios.defaults.headers.common["Accept"] = "application/json";
+            }
+            const res = await axios.get(`${API_URL}/users`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+            });
             setUsers(res.data);
         } catch (error) {
             console.error("Erro ao buscar usuários:", error);
@@ -112,7 +123,10 @@ export default function Settings() {
             const cleanSettings = Object.fromEntries(
                 Object.entries(settings).filter(([_, v]) => v !== null && v !== undefined)
             );
-            await axios.post(`${API_URL}/settings`, cleanSettings);
+            const token = localStorage.getItem("token");
+            await axios.post(`${API_URL}/settings`, cleanSettings, {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+            });
             toast({ title: "Configurações salvas!" });
         } catch (error: any) {
             console.error("Erro ao salvar:", error.response?.data || error.message);

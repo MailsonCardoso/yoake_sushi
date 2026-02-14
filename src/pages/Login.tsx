@@ -32,6 +32,7 @@ export default function Login() {
             const { access_token } = response.data;
             localStorage.setItem("token", access_token);
             axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+            axios.defaults.headers.common["Accept"] = "application/json";
 
             toast({
                 title: "Login realizado!",
