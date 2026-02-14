@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
             ['email' => 'administrador@yoakesushi.com.br'],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make('@Secur1t1@'),
+                'password' => Hash::make('@Secur1t1@'), // Senha administrativa padrão
             ]
         );
     }
