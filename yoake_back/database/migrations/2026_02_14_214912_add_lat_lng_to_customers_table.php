@@ -11,8 +11,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->string('lat')->nullable()->after('location_link');
-            $table->string('lng')->nullable()->after('lat');
+            if (!Schema::hasColumn('customers', 'location_link')) {
+                $table->string('location_link')->nullable()->after('address');
+            }
+            if (!Schema::hasColumn('customers', 'lat')) {
+                $table->string('lat')->nullable()->after('location_link');
+            }
+            if (!Schema::hasColumn('customers', 'lng')) {
+                $table->string('lng')->nullable()->after('lat');
+            }
         });
     }
 
