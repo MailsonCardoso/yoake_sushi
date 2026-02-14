@@ -43,7 +43,7 @@ const categories = [
 ];
 
 export default function Sales() {
-  const { products, customers, tables, addOrder } = useApp();
+  const { products, customers, tables, addOrder, settings } = useApp();
   const { toast } = useToast();
   const location = useLocation();
 
@@ -55,6 +55,7 @@ export default function Sales() {
   const [customerName, setCustomerName] = useState("");
   const [customerId, setCustomerId] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [customerLatLng, setCustomerLatLng] = useState<{ lat?: string, lng?: string }>({});
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [showDistanceCalc, setShowDistanceCalc] = useState(false);
   const [calculatedDistance, setCalculatedDistance] = useState(0);
@@ -106,17 +107,41 @@ export default function Sales() {
     if (customer) {
       setCustomerId(customer.id);
       setDeliveryAddress(customer.address);
+      setCustomerLatLng({ lat: customer.lat, lng: customer.lng });
     } else {
       setCustomerId("");
+      setCustomerLatLng({});
     }
   };
 
   const simulateDistance = () => {
-    const dist = Math.round((Math.random() * 10 + 1) * 10) / 10;
+    let dist = 0;
+
+    if (customerLatLng.lat && customerLatLng.lng && settings.company_lat && settings.company_lng) {
+      // Real calculation
+      const lat1 = Number(settings.company_lat);
+      const lon1 = Number(settings.company_lng);
+      const lat2 = Number(customerLatLng.lat);
+      const lon2 = Number(customerLatLng.lng);
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      dist = Math.round((R * c) * 10) / 10;
+    } else {
+      // Fallback to simulation
+      dist = Math.round((Math.random() * 10 + 1) * 10) / 10;
+      toast({ title: "Modo Simulação", description: "Lat/Lng não encontradas. Usando distância simulada." });
+    }
+
+    const feePerKm = Number(settings.delivery_fee_per_km || 2);
+    const finalFee = Math.round(dist * feePerKm * 100) / 100;
+
     setCalculatedDistance(dist);
-    setDeliveryFee(Math.round(dist * 2 * 100) / 100);
+    setDeliveryFee(finalFee);
     setShowDistanceCalc(false);
-    toast({ title: "Distância calculada", description: `${dist} km → Taxa: R$ ${(dist * 2).toFixed(2)}` });
+    toast({ title: "Entrega Calculada", description: `${dist} km → Taxa: R$ ${finalFee.toFixed(2)}` });
   };
 
   const handleSendOrder = () => {

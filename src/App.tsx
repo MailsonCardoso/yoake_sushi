@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Delivery from "./pages/Delivery";
 import OrderHistory from "./pages/OrderHistory";
 import TVMonitor from "./pages/TVMonitor";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                       <Route path="/delivery" element={<Delivery />} />
                       <Route path="/history" element={<OrderHistory />} />
                       <Route path="/monitor" element={<TVMonitor />} />
+                      <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>

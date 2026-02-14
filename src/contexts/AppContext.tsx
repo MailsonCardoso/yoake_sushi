@@ -41,6 +41,8 @@ export interface Customer {
   phone: string;
   address: string;
   location_link?: string;
+  lat?: string;
+  lng?: string;
 }
 
 export interface OrderItem {
@@ -86,6 +88,8 @@ interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   tables: TableData[];
   setTables: React.Dispatch<React.SetStateAction<TableData[]>>;
+  settings: Record<string, string>;
+  setSettings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   addOrder: (order: any) => Promise<void>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
   fetchData: () => Promise<void>;
@@ -98,20 +102,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<TableData[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const fetchData = async () => {
     try {
-      const [resProducts, resCustomers, resOrders, resTables] = await Promise.all([
+      const [resProducts, resCustomers, resOrders, resTables, resSettings] = await Promise.all([
         axios.get(`${API_URL}/products`),
         axios.get(`${API_URL}/customers`),
         axios.get(`${API_URL}/orders?status=active`),
         axios.get(`${API_URL}/tables`),
+        axios.get(`${API_URL}/settings`),
       ]);
       setProducts(resProducts.data);
       setCustomers(resCustomers.data);
       setOrders(resOrders.data);
       setTables(resTables.data);
+      setSettings(resSettings.data);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
     }
@@ -151,7 +158,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ products, setProducts, customers, setCustomers, orders, setOrders, tables, setTables, addOrder, updateOrderStatus, fetchData }}
+      value={{
+        products, setProducts,
+        customers, setCustomers,
+        orders, setOrders,
+        tables, setTables,
+        settings, setSettings,
+        addOrder, updateOrderStatus, fetchData
+      }}
     >
       {children}
     </AppContext.Provider>

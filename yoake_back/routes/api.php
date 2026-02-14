@@ -38,4 +38,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+
+    // Configurações
+    Route::get('/settings', [App\Http\Controllers\SettingController::class, 'index']);
+    Route::post('/settings', [App\Http\Controllers\SettingController::class, 'update']);
+
+    // Usuários
+    Route::get('/users', [App\Http\Controllers\UserController::class, 'index']);
+    Route::post('/users', [App\Http\Controllers\UserController::class, 'store']);
+    Route::delete('/users/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
 });

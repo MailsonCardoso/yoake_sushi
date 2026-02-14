@@ -25,7 +25,7 @@ import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity } from "lu
 import axios from "axios";
 
 export default function Registrations() {
-  const { products, fetchData, customers } = useApp();
+  const { products, fetchData, customers, settings } = useApp();
   const { toast } = useToast();
 
   const [showProductModal, setShowProductModal] = useState(false);
@@ -34,7 +34,7 @@ export default function Registrations() {
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "" });
+  const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "", lat: "", lng: "" });
 
   const openProductModal = (product?: Product) => {
     if (product) {
@@ -73,10 +73,17 @@ export default function Registrations() {
   const openCustomerModal = (customer?: Customer) => {
     if (customer) {
       setEditingCustomer(customer);
-      setCustomerForm({ name: customer.name, phone: customer.phone, address: customer.address, location_link: customer.location_link || "" });
+      setCustomerForm({
+        name: customer.name,
+        phone: customer.phone,
+        address: customer.address,
+        location_link: customer.location_link || "",
+        lat: customer.lat || "",
+        lng: customer.lng || ""
+      });
     } else {
       setEditingCustomer(null);
-      setCustomerForm({ name: "", phone: "", address: "", location_link: "" });
+      setCustomerForm({ name: "", phone: "", address: "", location_link: "", lat: "", lng: "" });
     }
     setShowCustomerModal(true);
   };
@@ -259,6 +266,39 @@ export default function Registrations() {
               <Label>Link do Google Maps</Label>
               <Input value={customerForm.location_link} onChange={(e) => setCustomerForm((p) => ({ ...p, location_link: e.target.value }))} placeholder="https://maps.google.com/..." />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Latitude</Label>
+                <Input value={customerForm.lat} onChange={(e) => setCustomerForm((p) => ({ ...p, lat: e.target.value }))} placeholder="-23.5505" />
+              </div>
+              <div>
+                <Label>Longitude</Label>
+                <Input value={customerForm.lng} onChange={(e) => setCustomerForm((p) => ({ ...p, lng: e.target.value }))} placeholder="-46.6333" />
+              </div>
+            </div>
+            {customerForm.lat && customerForm.lng && settings.company_lat && settings.company_lng && (
+              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-[#6366f1]" />
+                  <span className="text-xs font-bold text-slate-600 uppercase">Distância da Empresa:</span>
+                </div>
+                <span className="text-sm font-black text-[#6366f1]">
+                  {(() => {
+                    const lat1 = Number(settings.company_lat);
+                    const lon1 = Number(settings.company_lng);
+                    const lat2 = Number(customerForm.lat);
+                    const lon2 = Number(customerForm.lng);
+                    const R = 6371;
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    const d = R * c;
+                    return d.toFixed(2) + " km";
+                  })()}
+                </span>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" className="flex-1" onClick={() => setShowCustomerModal(false)}>Cancelar</Button>

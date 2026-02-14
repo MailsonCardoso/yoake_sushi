@@ -26,6 +26,7 @@ const navItems = [
   { title: "Gestão de Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Histórico", path: "/history", icon: Clock3 },
   { title: "Monitor TV", path: "/monitor", icon: Monitor },
+  { title: "Configurações", path: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
