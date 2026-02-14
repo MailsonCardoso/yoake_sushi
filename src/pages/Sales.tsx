@@ -157,10 +157,15 @@ export default function Sales() {
   };
 
   useEffect(() => {
-    if (orderType === "delivery" && customerLatLng.lat && customerLatLng.lng && settings.company_lat) {
+    const hasCoords = customerLatLng.lat && customerLatLng.lng;
+    const hasCompany = settings.company_lat && settings.company_lng;
+
+    if (orderType === "delivery" && hasCoords && hasCompany) {
+      console.log("Auto-calculating distance...");
+      toast({ title: "Calculando Entrega", description: "Coordenadas detectadas, calculando distância e taxa." });
       simulateDistance();
     }
-  }, [customerLatLng, orderType]);
+  }, [customerLatLng, orderType, settings.company_lat, settings.company_lng]);
 
   const filteredCustomers = useMemo(() => {
     if (!searchTerm) return [];
@@ -423,7 +428,7 @@ export default function Sales() {
               <Button
                 variant="secondary"
                 className="h-10 w-10 rounded-xl bg-[#6366f1] text-white hover:bg-[#4f46e5] font-bold p-0 text-[10px] shadow-lg shadow-indigo-100"
-                onClick={() => setOrderType("delivery")}
+                onClick={simulateDistance}
               >
                 Calc
               </Button>
