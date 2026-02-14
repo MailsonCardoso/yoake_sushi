@@ -169,6 +169,13 @@ export default function Sales() {
       return;
     }
 
+    const isDeliveryOrder = orderType === "delivery" && orderChannel !== "iFood";
+
+    if (isDeliveryOrder && !deliveryAddress) {
+      toast({ title: "Endereço obrigatório para Delivery", variant: "destructive" });
+      return;
+    }
+
     addOrder({
       items: cart.map(i => ({
         product_id: i.product.id,
@@ -181,10 +188,10 @@ export default function Sales() {
       channel: orderChannel,
       table_id: orderType === "table" ? selectedTable : undefined,
       customer_id: customerId || undefined,
-      delivery_address: (orderType === "delivery" || orderType === "counter") ? deliveryAddress : undefined,
-      delivery_location_link: (orderType === "delivery") ? deliveryLocationLink : undefined,
-      delivery_fee: orderType === "delivery" ? deliveryFee : 0,
-      distance_km: orderType === "delivery" ? calculatedDistance : 0,
+      delivery_address: isDeliveryOrder ? deliveryAddress : undefined,
+      delivery_location_link: isDeliveryOrder ? deliveryLocationLink : undefined,
+      delivery_fee: isDeliveryOrder ? deliveryFee : 0,
+      distance_km: isDeliveryOrder ? calculatedDistance : 0,
     });
 
     setCart([]);
@@ -273,6 +280,10 @@ export default function Sales() {
                   onClick={() => {
                     setOrderType(opt.type as any);
                     setOrderChannel(opt.channel);
+                    // Reset fee if not standard delivery
+                    if (!(opt.type === "delivery" && opt.channel !== "iFood")) {
+                      setDeliveryFee(0);
+                    }
                   }}
                   className={cn(
                     "flex-1 py-3 px-2 rounded-xl text-[10px] font-black transition-all",
@@ -304,13 +315,13 @@ export default function Sales() {
             </datalist>
           </div>
 
-          {(orderType === "delivery" || orderType === "counter") ? (
+          {(orderType === "delivery" && orderChannel !== "iFood") ? (
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Endereço Entrega..."
-                  className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
+                  placeholder="Endereço Entrega (Obrigatório)..."
+                  className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm border-red-100"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                 />
@@ -324,24 +335,26 @@ export default function Sales() {
               </Button>
             </div>
           ) : (
-            <div className="relative">
-              <Hash className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white outline-none text-sm">
-                  <SelectValue placeholder="Selecionar Mesa..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {freeTables.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>Mesa {t.number}</SelectItem>
-                  ))}
-                  {freeTables.length === 0 && <SelectItem value="none" disabled>Nenhuma mesa livre</SelectItem>}
-                </SelectContent>
-              </Select>
-            </div>
+            orderType === "table" ? (
+              <div className="relative">
+                <Hash className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
+                <Select value={selectedTable} onValueChange={setSelectedTable}>
+                  <SelectTrigger className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white outline-none text-sm">
+                    <SelectValue placeholder="Selecionar Mesa..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {freeTables.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>Mesa {t.number}</SelectItem>
+                    ))}
+                    {freeTables.length === 0 && <SelectItem value="none" disabled>Nenhuma mesa livre</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null
           )}
 
           <div className="flex gap-2 pt-2">
-            {orderType === "delivery" && (
+            {(orderType === "delivery" && orderChannel !== "iFood") && (
               <div className="flex items-center gap-2 w-full pt-2">
                 <Badge variant="outline" className="h-10 shrink-0 justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
                   Taxa Entrega
