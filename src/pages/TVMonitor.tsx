@@ -32,34 +32,34 @@ export default function TVMonitor() {
         <div className="fixed inset-0 bg-white flex overflow-hidden font-sans">
             {/* Coluna Preparando */}
             <div className="flex-1 bg-[#f1f5f9] flex flex-col items-center p-12 overflow-hidden border-r-4 border-white">
-                <div className="flex items-center gap-6 mb-16 opacity-60">
-                    <Clock className="h-20 w-20 text-slate-500" />
-                    <h2 className="text-7xl font-black text-slate-500 tracking-tighter uppercase">Preparando</h2>
+                <div className="flex items-center gap-6 mb-12 opacity-60">
+                    <Clock className="h-16 w-16 text-slate-500" />
+                    <h2 className="text-5xl font-black text-slate-500 tracking-tighter uppercase">Preparando</h2>
                 </div>
 
                 <div className="w-full flex flex-col items-center gap-6">
                     {preparingOrders.slice(0, 8).map((order) => (
-                        <div key={order.id} className="text-8xl font-black text-slate-400 animate-pulse">
-                            {order.readable_id}
+                        <div key={order.id} className="text-5xl font-black text-slate-400 animate-pulse">
+                            {order.type === 'mesa' && order.table?.number ? `Mesa ${order.table.number}` : order.readable_id}
                         </div>
                     ))}
                     {preparingOrders.length === 0 && (
-                        <div className="text-4xl italic text-slate-300 mt-20">Nenhum pedido em preparo</div>
+                        <div className="text-3xl italic text-slate-300 mt-20">Nenhum pedido em preparo</div>
                     )}
                 </div>
             </div>
 
             {/* Coluna Pronto */}
             <div className="flex-1 flex flex-col items-center p-12 overflow-hidden">
-                <div className="flex items-center gap-6 mb-16">
-                    <Bell className="h-20 w-20 text-[#10b981] animate-bounce" />
-                    <h2 className="text-7xl font-black text-[#10b981] tracking-tighter uppercase">Pronto</h2>
+                <div className="flex items-center gap-6 mb-12">
+                    <Bell className="h-16 w-16 text-[#10b981] animate-bounce" />
+                    <h2 className="text-5xl font-black text-[#10b981] tracking-tighter uppercase">Pronto</h2>
                 </div>
 
-                <div className="w-full flex flex-col items-center gap-8">
+                <div className="w-full flex flex-col items-center gap-10">
                     {readyOrders.slice(0, 5).map((order) => (
-                        <div key={order.id} className="text-[14rem] leading-none font-black text-[#10b981] drop-shadow-sm tracking-tighter">
-                            {order.readable_id}
+                        <div key={order.id} className="text-[8rem] leading-none font-black text-[#10b981] drop-shadow-sm tracking-tighter">
+                            {order.type === 'mesa' && order.table?.number ? `Mesa ${order.table.number}` : order.readable_id}
                         </div>
                     ))}
                     {readyOrders.length === 0 && (

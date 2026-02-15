@@ -61,7 +61,10 @@ export default function Kitchen() {
                   <Card key={order.id} className="border-none shadow-sm">
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-sm font-bold text-primary">{order.readable_id}</span>
+                        <span className="font-mono text-sm font-bold text-primary">
+                          {order.readable_id}
+                          {order.type === 'mesa' && order.table?.number && ` • Mesa ${order.table.number}`}
+                        </span>
                         <span className="text-xs text-muted-foreground">{formatTime(order.created_at)}</span>
                       </div>
 
