@@ -43,12 +43,12 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> = 
 
 export default function ActiveOrders() {
     const navigate = useNavigate();
-    const { orders, payOrder, fetchData, cashStatus } = useApp();
+    const { orders = [], payOrder, fetchData, cashStatus } = useApp();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
 
     // Filter only non-completed orders
-    const activeOrders = orders.filter(o => o.status !== "Concluído" && o.status !== "Cancelado");
+    const activeOrders = (orders || []).filter(o => o.status !== "Concluído" && o.status !== "Cancelado");
 
     const filteredOrders = activeOrders.filter(order =>
         order.readable_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,7 +91,7 @@ export default function ActiveOrders() {
                         <div className="text-right hidden sm:block">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total em aberto</p>
                             <p className="text-2xl font-black text-slate-800">
-                                R$ {activeOrders.reduce((sum, o) => sum + Number(o.total), 0).toFixed(2).replace('.', ',')}
+                                R$ {(activeOrders || []).reduce((sum, o) => sum + Number(o.total || 0), 0).toFixed(2).replace('.', ',')}
                             </p>
                         </div>
                         <Button
@@ -118,7 +118,7 @@ export default function ActiveOrders() {
                 </Card>
 
                 {/* Grid of Cards */}
-                {filteredOrders.length === 0 ? (
+                {(filteredOrders || []).length === 0 ? (
                     <div className="py-32 text-center bg-white rounded-[3rem] border border-dashed border-slate-200 shadow-sm">
                         <AlertCircle className="h-20 w-20 text-slate-100 mx-auto mb-6" />
                         <h3 className="text-2xl font-black text-slate-400">Nenhum pedido ativo no momento</h3>
@@ -126,7 +126,7 @@ export default function ActiveOrders() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(order => (
+                        {(filteredOrders || []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(order => (
                             <Card
                                 key={order.id}
                                 className="group border-none shadow-sm hover:shadow-2xl transition-all duration-300 rounded-[2.5rem] overflow-hidden bg-white flex flex-col ring-1 ring-slate-200/50"
@@ -161,13 +161,13 @@ export default function ActiveOrders() {
                                 <CardContent className="p-6 pt-2 flex-1">
                                     <div className="h-px bg-slate-100 w-full my-4" />
                                     <div className="space-y-2">
-                                        {order.items.slice(0, 3).map((item, idx) => (
+                                        {(order.items || []).slice(0, 3).map((item, idx) => (
                                             <div key={idx} className="flex justify-between items-center text-sm font-medium text-slate-600">
                                                 <span className="truncate flex-1 pr-2">{item.quantity}x {item.product?.name}</span>
-                                                <span className="text-slate-400 font-bold tabular-nums">R$ {(item.quantity * item.unit_price).toFixed(2).replace('.', ',')}</span>
+                                                <span className="text-slate-400 font-bold tabular-nums">R$ {(item.quantity * (item.unit_price || 0)).toFixed(2).replace('.', ',')}</span>
                                             </div>
                                         ))}
-                                        {order.items.length > 3 && (
+                                        {(order.items || []).length > 3 && (
                                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-1">
                                                 + {order.items.length - 3} outros itens
                                             </p>

@@ -33,10 +33,16 @@ const API_URL = "https://api2.platformx.com.br/api";
 const TORTUOSITY_FACTOR = 1.3;
 
 export default function Sales() {
-  const { products, categories, tables, customers, orders, addOrder, payOrder, addItemsToOrder, cashStatus, openCash, closeCash, settings, fetchData } = useApp();
+  const { products = [], tables = [], customers = [], orders = [], addOrder, payOrder, addItemsToOrder, cashStatus, openCash, closeCash, settings = {}, fetchData } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const editOrderId = location.state?.editOrderId;
+
+  // Derivando categorias únicas dos produtos
+  const categories = Array.from(new Set((products || []).map(p => p.category))).map(cat => ({
+    id: cat,
+    name: cat.charAt(0).toUpperCase() + cat.slice(1)
+  }));
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [productSearch, setProductSearch] = useState("");
@@ -281,7 +287,7 @@ export default function Sales() {
         {/* Products Grid */}
         <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredProducts.map((p) => (
+            {(filteredProducts || []).map((p) => (
               <Card
                 key={p.id}
                 className="group border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer rounded-3xl overflow-hidden bg-white"
