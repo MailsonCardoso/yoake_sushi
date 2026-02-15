@@ -136,12 +136,100 @@ export default function Sales() {
   };
 
   const simulateDistance = () => {
-    const dist = Math.round((Math.random() * 10 + 1) * 10) / 10;
-    setCalculatedDistance(dist);
-    const feePerKm = Number(settings.delivery_fee_per_km || 2);
-    setDeliveryFee(dist * feePerKm);
-    setShowDistanceCalc(false);
-    toast({ title: "Distância calculada", description: `${dist} km → Taxa: R$ ${(dist * feePerKm).toFixed(2)}` });
+    const companyLat = Number(settings.company_lat);
+    const companyLng = Number(settings.company_lng);
+
+    if (!companyLat || !companyLng) {
+      toast({
+        title: "Erro de Configuração",
+        description: "Coordenadas da empresa não configuradas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!deliveryAddress) {
+      toast({
+        title: "Endereço obrigatório",
+        description: "Informe o link do Google Maps.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Extrair coordenadas do link do Google Maps
+    // Formatos suportados:
+    // https://maps.google.com/?q=-23.550520,-46.633308
+    // https://www.google.com/maps/place/-23.550520,-46.633308
+    // https://goo.gl/maps/... (redirecionado)
+    let customerLat = 0;
+    let customerLng = 0;
+
+    try {
+      // Tentar extrair do formato ?q=lat,lng
+      const qMatch = deliveryAddress.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+      if (qMatch) {
+        customerLat = Number(qMatch[1]);
+        customerLng = Number(qMatch[2]);
+      } else {
+        // Tentar extrair do formato /place/lat,lng ou /@lat,lng
+        const placeMatch = deliveryAddress.match(/[@\/](-?\d+\.?\d*),(-?\d+\.?\d*)/);
+        if (placeMatch) {
+          customerLat = Number(placeMatch[1]);
+          customerLng = Number(placeMatch[2]);
+        }
+      }
+
+      if (!customerLat || !customerLng) {
+        toast({
+          title: "Link inválido",
+          description: "Não foi possível extrair as coordenadas do link.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Cálculo de distância usando fórmula de Haversine
+      const R = 6371; // Raio da Terra em km
+      const dLat = (customerLat - companyLat) * Math.PI / 180;
+      const dLon = (customerLng - companyLng) * Math.PI / 180;
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(companyLat * Math.PI / 180) * Math.cos(customerLat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      // Distância em linha reta
+      let distance = R * c;
+
+      // Aplicar fator de tortuosidade de 1.3 (30% a mais)
+      const TORTUOSITY_FACTOR = 1.3;
+      distance = distance * TORTUOSITY_FACTOR;
+
+      // Arredondar para 1 casa decimal
+      distance = Math.round(distance * 10) / 10;
+
+      const feePerKm = Number(settings.delivery_fee_per_km || 2);
+      const finalFee = Math.round(distance * feePerKm * 100) / 100;
+
+      setCalculatedDistance(distance);
+      setDeliveryFee(finalFee);
+      setShowDistanceCalc(false);
+
+      toast({
+        title: "Distância calculada",
+        description: `${distance} km → Taxa: R$ ${finalFee.toFixed(2)}`
+      });
+    } catch (error) {
+      console.error("Erro ao calcular distância:", error);
+      toast({
+        title: "Erro no cálculo",
+        description: "Não foi possível calcular a distância.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSendOrder = async () => {
