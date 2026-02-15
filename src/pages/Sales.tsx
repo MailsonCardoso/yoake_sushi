@@ -76,9 +76,18 @@ export default function Sales() {
   const [openingBalance, setOpeningBalance] = useState("");
   const [calculatedDistance, setCalculatedDistance] = useState(0);
 
+  const categoriesMap: Record<string, string> = {
+    "Todos": "Todos",
+    "burgers": "lanches",
+    "drinks": "bebidas",
+    "portions": "Porções"
+  };
+
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(products.map((p) => p.category)));
-    return ["Todos", ...cats];
+    const rawCats = Array.from(new Set(products.map((p) => p.category)));
+    // Garantir que as categorias venham na ordem: Todos, lanches, bebidas, Porções
+    const ordered = ["burgers", "drinks", "portions"].filter(c => rawCats.includes(c as any));
+    return ["Todos", ...ordered];
   }, [products]);
 
   const activeOrderId = editOrderId || (orderType === "table" && orders.find(o => o.table_id === selectedTable && o.status !== "Concluído" && o.status !== "Cancelado")?.id);
@@ -121,7 +130,8 @@ export default function Sales() {
     const customer = customers.find((c) => c.name === name);
     if (customer) {
       setCustomerId(customer.id);
-      setDeliveryAddress(customer.address || "");
+      // Priorizar o link de localização para delivery
+      setDeliveryAddress(customer.location_link || customer.address || "");
     }
   };
 
@@ -300,7 +310,7 @@ export default function Sales() {
               onClick={() => setSelectedCategory(cat)}
               className="whitespace-nowrap"
             >
-              {cat}
+              {categoriesMap[cat] || cat}
             </Button>
           ))}
         </div>
