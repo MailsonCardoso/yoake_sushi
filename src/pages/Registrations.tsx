@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity, Trash2 } from "lucide-react";
+import { Plus, Pencil, Package, Users, MapPin, ExternalLink, Activity, Trash2, Search } from "lucide-react";
 import axios from "axios";
 
 export default function Registrations() {
@@ -40,6 +40,19 @@ export default function Registrations() {
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "", lat: "", lng: "" });
+
+  const [productSearch, setProductSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.category.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  const filteredCustomers = customers.filter(c =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    c.phone.includes(customerSearch)
+  );
 
   const openProductModal = (product?: Product) => {
     if (product) {
@@ -192,15 +205,26 @@ export default function Registrations() {
 
         <TabsContent value="products">
           <Card className="border-none shadow-premium">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Cardápio Ativo</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="flex flex-col gap-1">
+                <CardTitle className="text-lg">Cardápio Ativo</CardTitle>
+                <div className="relative mt-2">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar produto..."
+                    className="pl-9 h-9 w-[250px] bg-secondary/20 border-none shadow-none text-xs"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                  />
+                </div>
+              </div>
               <Button size="sm" onClick={() => openProductModal()} className="shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4 mr-1" /> Novo Item
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {products.map((product) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                {filteredProducts.map((product) => (
                   <div
                     key={product.id}
                     className="flex items-center justify-between p-4 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors border border-transparent hover:border-border"
@@ -237,15 +261,26 @@ export default function Registrations() {
 
         <TabsContent value="customers">
           <Card className="border-none shadow-premium">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Clientes Registrados</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="flex flex-col gap-1">
+                <CardTitle className="text-lg">Clientes Registrados</CardTitle>
+                <div className="relative mt-2">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar cliente..."
+                    className="pl-9 h-9 w-[250px] bg-secondary/10 border-none shadow-none text-xs"
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                  />
+                </div>
+              </div>
               <Button size="sm" onClick={() => openCustomerModal()} variant="secondary">
                 <Plus className="h-4 w-4 mr-1" /> Novo Cliente
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {customers.map((customer) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                {filteredCustomers.map((customer) => (
                   <div
                     key={customer.id}
                     className="flex items-center justify-between p-4 rounded-xl bg-secondary/10 border border-border"
