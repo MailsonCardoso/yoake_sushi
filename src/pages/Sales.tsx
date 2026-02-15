@@ -49,7 +49,7 @@ const categories = [
 ];
 
 export default function Sales() {
-  const { products, customers, orders, tables, addOrder, settings } = useApp();
+  const { products, customers, orders, tables, addOrder, addItemsToOrder, payOrder, settings } = useApp();
   const { toast } = useToast();
   const location = useLocation();
 
@@ -76,6 +76,8 @@ export default function Sales() {
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentAccount, setSelectedPaymentAccount] = useState<string>("");
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [activeOrderItems, setActiveOrderItems] = useState<any[]>([]);
 
   useEffect(() => {
     if (location.state?.tableId) {
@@ -83,6 +85,27 @@ export default function Sales() {
       setSelectedTable(location.state.tableId);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (orderType === 'table' && selectedTable) {
+      const table = tables.find(t => t.id === selectedTable);
+      if (table?.current_order_id) {
+        setActiveOrderId(table.current_order_id);
+        // Tenta achar nos últimos pedidos ou busca detalhes
+        axios.get(`https://api2.platformx.com.br/api/orders/${table.current_order_id}`)
+          .then(res => {
+            setActiveOrderItems(res.data.items || []);
+          })
+          .catch(err => console.error("Erro ao carregar detalhes da mesa", err));
+      } else {
+        setActiveOrderId(null);
+        setActiveOrderItems([]);
+      }
+    } else {
+      setActiveOrderId(null);
+      setActiveOrderItems([]);
+    }
+  }, [selectedTable, orderType, tables]);
 
   const filteredProducts = useMemo(
     () => {
@@ -104,7 +127,8 @@ export default function Sales() {
 
   const freeTables = tables.filter((t) => t.status === "Livre");
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0);
-  const grandTotal = cartTotal + (orderType === "delivery" ? deliveryFee : 0);
+  const activeItemsTotal = activeOrderItems.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
+  const grandTotal = cartTotal + activeItemsTotal + (orderType === "delivery" ? deliveryFee : 0);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -257,7 +281,7 @@ export default function Sales() {
     }
   };
 
-  const handleSendOrder = () => {
+  const handleSendOrder = async () => {
     if (cart.length === 0) {
       toast({ title: "Carrinho vazio", description: "Adicione itens ao pedido", variant: "destructive" });
       return;
@@ -273,10 +297,41 @@ export default function Sales() {
       return;
     }
 
+    // Se já existe um pedido aberto (Mesa/Balcão), apenas adiciona os itens
+    if ((orderType === 'table' || orderType === 'counter') && activeOrderId) {
+      await addItemsToOrder(activeOrderId, cart.map(i => ({
+        product_id: i.product.id,
+        quantity: i.quantity,
+        unit_price: i.product.price
+      })));
+      setCart([]);
+      return;
+    }
+
     const isDeliveryOrder = orderType === "delivery" && orderChannel !== "iFood";
 
     if (isDeliveryOrder && !deliveryAddress) {
       toast({ title: "Endereço obrigatório para Delivery", variant: "destructive" });
+      return;
+    }
+
+    // Para Mesa/Balcão que NÃO tem pedido aberto ainda, criamos SEM pagamento
+    if (orderType === 'table' || orderType === 'counter') {
+      await addOrder({
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.product.price
+        })),
+        subtotal: cartTotal,
+        total: grandTotal,
+        type: orderType === "table" ? "mesa" : "balcao",
+        channel: orderChannel,
+        table_id: orderType === "table" ? selectedTable : undefined,
+        customer_id: customerId || undefined,
+        cash_register_id: cashStatus?.register?.id
+      });
+      setCart([]);
       return;
     }
 
@@ -289,10 +344,26 @@ export default function Sales() {
     setShowPaymentModal(true);
   };
 
-  const confirmSendOrder = (account: string) => {
+  const handleCloseBill = () => {
+    if (!activeOrderId) return;
+    setShowPaymentModal(true);
+  };
+
+  const confirmSendOrder = async (account: string) => {
+    // Se estivermos fechando uma conta existente
+    if (activeOrderId) {
+      await payOrder(activeOrderId, {
+        payment_method: account,
+        payment_account: account,
+        cash_register_id: cashStatus?.register?.id
+      });
+      setShowPaymentModal(false);
+      return;
+    }
+
     const isDeliveryOrder = orderType === "delivery" && orderChannel !== "iFood";
 
-    addOrder({
+    await addOrder({
       items: cart.map(i => ({
         product_id: i.product.id,
         quantity: i.quantity,
@@ -309,6 +380,7 @@ export default function Sales() {
       delivery_fee: isDeliveryOrder ? deliveryFee : 0,
       distance_km: isDeliveryOrder ? calculatedDistance : 0,
       payment_account: account,
+      payment_method: account,
       cash_register_id: cashStatus?.register?.id
     });
 
@@ -546,7 +618,25 @@ export default function Sales() {
 
         {/* Cart Items List */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {cart.length === 0 ? (
+          {/* Mostra itens ativos da comanda se existirem */}
+          {activeOrderItems.length > 0 && (
+            <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-100 border-dashed">
+              <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Já Lançados</p>
+              <div className="space-y-3">
+                {activeOrderItems.map((item, idx) => (
+                  <div key={`active-${idx}`} className="flex justify-between items-center opacity-60">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-slate-800 truncate">{item.product?.name || "Item"}</p>
+                      <p className="text-[10px] font-bold text-slate-400">{item.quantity}x R$ {Number(item.unit_price).toFixed(2)}</p>
+                    </div>
+                    <span className="text-xs font-black text-slate-500">R$ {(item.quantity * item.unit_price).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {cart.length === 0 && activeOrderItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-200">
               <div className="p-8 rounded-full bg-slate-50 mb-4">
                 <ShoppingCart className="h-12 w-12" />
@@ -602,21 +692,42 @@ export default function Sales() {
           </div>
 
           <div className="flex gap-4">
-            <Button
-              variant="ghost"
-              className="flex-1 h-14 rounded-2xl font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
-              onClick={() => setCart([])}
-              disabled={cart.length === 0}
-            >
-              Limpar
-            </Button>
-            <Button
-              className="flex-[2] h-14 rounded-2xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-base shadow-xl shadow-indigo-200 disabled:opacity-50 transition-all"
-              onClick={handleSendOrder}
-              disabled={cart.length === 0}
-            >
-              Finalizar
-            </Button>
+            {activeOrderId ? (
+              <>
+                <Button
+                  variant="outline"
+                  className="flex-1 h-14 rounded-2xl font-bold bg-white text-indigo-600 border-indigo-100 hover:bg-indigo-50 transition-all px-2 text-xs"
+                  onClick={handleSendOrder}
+                  disabled={cart.length === 0}
+                >
+                  Confirmar Itens
+                </Button>
+                <Button
+                  className="flex-1 h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs shadow-xl shadow-rose-100 transition-all px-2"
+                  onClick={handleCloseBill}
+                >
+                  Fechar Conta
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="flex-1 h-14 rounded-2xl font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                  onClick={() => setCart([])}
+                  disabled={cart.length === 0}
+                >
+                  Limpar
+                </Button>
+                <Button
+                  className="flex-[2] h-14 rounded-2xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-base shadow-xl shadow-indigo-200 disabled:opacity-50 transition-all"
+                  onClick={handleSendOrder}
+                  disabled={cart.length === 0}
+                >
+                  {orderType === 'delivery' ? 'Finalizar' : 'Lançar Itens'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

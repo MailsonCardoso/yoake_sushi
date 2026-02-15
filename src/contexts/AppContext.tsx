@@ -107,7 +107,9 @@ interface AppContextType {
   cashStatus: CashStatus | null;
   openCash: (opening_balance: number) => Promise<void>;
   closeCash: () => Promise<void>;
-  addOrder: (order: any) => Promise<void>;
+  addOrder: (order: any) => Promise<any>;
+  addItemsToOrder: (id: string, items: any[]) => Promise<void>;
+  payOrder: (id: string, paymentData: any) => Promise<void>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
   fetchData: () => Promise<void>;
 }
@@ -160,8 +162,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setOrders((prev) => [response.data, ...prev]);
       toast({ title: "Pedido enviado com sucesso!" });
       fetchData(); // Refresh tables and states
+      return response.data;
     } catch (error) {
       toast({ title: "Erro ao enviar pedido", variant: "destructive" });
+    }
+  };
+
+  const addItemsToOrder = async (id: string, items: any[]) => {
+    try {
+      await axios.post(`${API_URL}/orders/${id}/items`, { items });
+      toast({ title: "Itens adicionados com sucesso!" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Erro ao adicionar itens", variant: "destructive" });
+    }
+  };
+
+  const payOrder = async (id: string, paymentData: any) => {
+    try {
+      await axios.post(`${API_URL}/orders/${id}/pay`, paymentData);
+      toast({ title: "Pagamento realizado e pedido concluído!" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "Erro ao processar pagamento", variant: "destructive" });
     }
   };
 
@@ -205,7 +228,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tables, setTables,
         settings, setSettings,
         cashStatus, openCash, closeCash,
-        addOrder, updateOrderStatus, fetchData
+        addOrder, addItemsToOrder, payOrder, updateOrderStatus, fetchData
       }}
     >
       {children}

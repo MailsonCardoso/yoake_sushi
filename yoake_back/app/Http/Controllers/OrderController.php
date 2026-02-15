@@ -125,4 +125,70 @@ class OrderController extends Controller
     {
         return Order::with(['items.product', 'customer', 'table'])->findOrFail($id);
     }
+
+    public function addItems(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.product_id' => 'required|uuid',
+            'items.*.quantity' => 'required|integer',
+            'items.*.unit_price' => 'required|numeric',
+        ]);
+
+        return DB::transaction(function () use ($validated, $id) {
+            $order = Order::findOrFail($id);
+
+            $addedTotal = 0;
+            foreach ($validated['items'] as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                ]);
+                $addedTotal += ($item['quantity'] * $item['unit_price']);
+            }
+
+            $order->subtotal += $addedTotal;
+            $order->total += $addedTotal;
+            $order->save();
+
+            if ($order->type === 'mesa' && $order->table_id) {
+                RestaurantTable::where('id', $order->table_id)->update([
+                    'current_total' => $order->total
+                ]);
+            }
+
+            return $order->load('items.product');
+        });
+    }
+
+    public function pay(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'payment_method' => 'required|string',
+            'cash_register_id' => 'required|uuid',
+            'payment_account' => 'required|string',
+        ]);
+
+        return DB::transaction(function () use ($validated, $id) {
+            $order = Order::findOrFail($id);
+            $order->update([
+                'payment_method' => $validated['payment_method'],
+                'cash_register_id' => $validated['cash_register_id'],
+                'payment_account' => $validated['payment_account'],
+                'status' => 'Concluído'
+            ]);
+
+            if ($order->type === 'mesa' && $order->table_id) {
+                RestaurantTable::where('id', $order->table_id)->update([
+                    'status' => 'Livre',
+                    'current_total' => 0,
+                    'current_order_id' => null
+                ]);
+            }
+
+            return $order;
+        });
+    }
 }

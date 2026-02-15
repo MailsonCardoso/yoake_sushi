@@ -41,6 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{id}/items', [OrderController::class, 'addItems']);
+    Route::post('/orders/{id}/pay', [OrderController::class, 'pay']);
+
 
     // Configurações
     Route::get('/settings', [App\Http\Controllers\SettingController::class, 'index']);
