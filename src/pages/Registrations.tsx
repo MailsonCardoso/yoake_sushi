@@ -52,17 +52,24 @@ export default function Registrations() {
   const saveProduct = async () => {
     if (!productForm.name || !productForm.price) return;
     try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
+      const priceValue = typeof productForm.price === 'string'
+        ? Number(productForm.price.replace(',', '.'))
+        : Number(productForm.price);
+
       if (editingProduct) {
         await axios.put(`https://api2.platformx.com.br/api/products/${editingProduct.id}`, {
           ...productForm,
-          price: Number(productForm.price)
-        });
+          price: priceValue
+        }, { headers });
         toast({ title: "Produto atualizado!" });
       } else {
         await axios.post(`https://api2.platformx.com.br/api/products`, {
           ...productForm,
-          price: Number(productForm.price)
-        });
+          price: priceValue
+        }, { headers });
         toast({ title: "Produto criado!" });
       }
       fetchData();
@@ -93,11 +100,14 @@ export default function Registrations() {
   const saveCustomer = async () => {
     if (!customerForm.name) return;
     try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
       if (editingCustomer) {
-        await axios.put(`https://api2.platformx.com.br/api/customers/${editingCustomer.id}`, customerForm);
+        await axios.put(`https://api2.platformx.com.br/api/customers/${editingCustomer.id}`, customerForm, { headers });
         toast({ title: "Cadastro atualizado!" });
       } else {
-        await axios.post(`https://api2.platformx.com.br/api/customers`, customerForm);
+        await axios.post(`https://api2.platformx.com.br/api/customers`, customerForm, { headers });
         toast({ title: "Cliente cadastrado!" });
       }
       fetchData();
@@ -121,7 +131,9 @@ export default function Registrations() {
   const confirmDelete = async () => {
     if (!customerToDelete) return;
     try {
-      await axios.delete(`https://api2.platformx.com.br/api/customers/${customerToDelete}`);
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+      await axios.delete(`https://api2.platformx.com.br/api/customers/${customerToDelete}`, { headers });
       toast({ title: "Cliente excluído!" });
       fetchData();
       setShowDeleteConfirm(false);
