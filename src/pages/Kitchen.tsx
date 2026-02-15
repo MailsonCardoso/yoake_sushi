@@ -18,11 +18,10 @@ export default function Kitchen() {
   const nextStatus: Record<string, Order["status"]> = {
     Pendente: "Preparando",
     Preparando: "Pronto",
-    Pronto: "Concluído",
   };
 
   const handleAdvance = (order: Order) => {
-    let next = nextStatus[order.status];
+    let next: Order["status"] | undefined = nextStatus[order.status];
 
     // Se for delivery e estiver pronto, o próximo passo é 'Despachado'
     if (order.status === "Pronto" && order.type === "delivery") {
@@ -83,15 +82,23 @@ export default function Kitchen() {
                         <Badge variant="outline" className="text-[10px] h-4">{order.type}</Badge>
                       </div>
 
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        variant={col.status === "Pronto" ? "default" : "secondary"}
-                        onClick={() => handleAdvance(order)}
-                      >
-                        {col.status === "Pronto" ? (order.type === "delivery" ? "Despachar" : "Finalizar") : "Avançar"}
-                        <ArrowRight className="h-4 w-4 ml-1" />
-                      </Button>
+                      {col.status !== "Pronto" || order.type === "delivery" ? (
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          variant={col.status === "Pronto" ? "default" : "secondary"}
+                          onClick={() => handleAdvance(order)}
+                        >
+                          {col.status === "Pendente" ? "Preparar" :
+                            col.status === "Preparando" ? "Marcar como Pronto" :
+                              "Despachar"}
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      ) : (
+                        <div className="py-2 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 rounded-xl">
+                          Aguardando Retirada
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
