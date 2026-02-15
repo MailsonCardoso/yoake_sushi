@@ -211,6 +211,11 @@ export default function Registrations() {
                         <Badge variant="outline" className="text-[10px] uppercase h-4 px-1">{product.category}</Badge>
                         <span className="text-[10px] text-muted-foreground">ID: {product.id.split("-")[0]}</span>
                       </div>
+                      {product.description && (
+                        <p className="text-[11px] text-muted-foreground mt-2 italic line-clamp-1 max-w-[300px]">
+                          {product.description}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-black text-sm text-primary">

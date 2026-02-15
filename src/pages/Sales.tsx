@@ -313,7 +313,9 @@ export default function Sales() {
             >
               <div className="flex-1 mb-3">
                 <h3 className="font-bold text-slate-800 text-base leading-tight mb-1">{product.name}</h3>
-                <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description || "Sem descrição disponível"}</p>
+                {product.description && (
+                  <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description}</p>
+                )}
               </div>
               <div className="flex items-center justify-between mt-auto">
                 <span className="text-lg font-black text-[#6366f1]">
