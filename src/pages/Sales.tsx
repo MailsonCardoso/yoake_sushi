@@ -76,17 +76,7 @@ export default function Sales() {
   const [openingBalance, setOpeningBalance] = useState("");
   const [calculatedDistance, setCalculatedDistance] = useState(0);
 
-  const categoriesMap: Record<string, string> = {
-    "Todos": "Todos",
-    "burgers": "lanches",
-    "drinks": "bebidas",
-    "portions": "Porções"
-  };
-
-  const categories = useMemo(() => {
-    // Sempre mostrar todas as categorias, independente de ter produtos
-    return ["Todos", "burgers", "drinks", "portions"];
-  }, []);
+  const categories = ["Todos", "lanches", "bebidas", "Porções"];
 
   const activeOrderId = editOrderId || (orderType === "table" && orders.find(o => o.table_id === selectedTable && o.status !== "Concluído" && o.status !== "Cancelado")?.id);
 
@@ -396,7 +386,7 @@ export default function Sales() {
               onClick={() => setSelectedCategory(cat)}
               className="whitespace-nowrap"
             >
-              {categoriesMap[cat] || cat}
+              {cat}
             </Button>
           ))}
         </div>
