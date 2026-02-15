@@ -32,7 +32,8 @@ import {
   Lock,
   Unlock,
   Table as TableIcon,
-  Bike
+  Bike,
+  Store
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
