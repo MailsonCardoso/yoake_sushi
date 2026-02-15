@@ -15,6 +15,7 @@ import {
   ChevronRight,
   LogOut,
   TrendingUp,
+  LayoutList,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,11 +23,12 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", path: "/", icon: LayoutDashboard },
   { title: "Análise Financeira", path: "/finance", icon: TrendingUp },
+  { title: "Monitor de Pedidos", path: "/orders", icon: LayoutList },
   { title: "Lançar Pedidos", path: "/sales", icon: ShoppingCart },
-  { title: "Monitor de Pedidos", path: "/orders", icon: ClipboardList },
+  { title: "Gestão De Mesas", path: "/tables", icon: Grid3X3 },
   { title: "App do Entregador", path: "/delivery", icon: Bike },
+  { title: "Cadastros", path: "/registrations", icon: ClipboardList },
   { title: "Monitor Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
-  { title: "Gestão de Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Histórico", path: "/history", icon: Clock3 },
   { title: "Monitor TV", path: "/monitor", icon: Monitor },
   { title: "Configurações", path: "/settings", icon: Settings },
