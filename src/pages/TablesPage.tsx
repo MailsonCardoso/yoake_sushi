@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -285,6 +286,7 @@ export default function TablesPage() {
         <DialogContent className="sm:max-w-[400px] rounded-3xl p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-slate-800">Abrir Mesa {selectedTable?.number}</DialogTitle>
+            <DialogDescription>Inicie um novo atendimento definindo o número de pessoas na mesa.</DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-6">
             <div className="space-y-3">
@@ -308,6 +310,10 @@ export default function TablesPage() {
       {/* Table Details Modal (Redesigned) */}
       <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
         <DialogContent className="sm:max-w-[600px] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Detalhes da Mesa {selectedTable?.number}</DialogTitle>
+            <DialogDescription>Resumo do consumo e opções de gerenciamento para esta mesa.</DialogDescription>
+          </DialogHeader>
           <div className="p-8 pb-4">
             <div className="flex justify-between items-start mb-8">
               <h2 className="text-3xl font-black text-slate-800">Mesa {selectedTable?.number}</h2>
@@ -382,6 +388,7 @@ export default function TablesPage() {
         <DialogContent className="sm:max-w-[400px] rounded-3xl p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-slate-800">Nova Mesa</DialogTitle>
+            <DialogDescription>Adicione uma nova mesa ao seu salão definindo o número e capacidade.</DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-4">
             <div className="space-y-2">

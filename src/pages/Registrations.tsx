@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -254,6 +255,7 @@ export default function Registrations() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingProduct ? "Editar Produto" : "Novo Produto"}</DialogTitle>
+            <DialogDescription>Preencha os detalhes do produto para adicionar ou atualizar no cardápio.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -294,6 +296,7 @@ export default function Registrations() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingCustomer ? "Editar Cadastro" : "Cadastro de Cliente"}</DialogTitle>
+            <DialogDescription>Preencha os detalhes do cliente para adicionar ou atualizar na sua base.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -407,12 +410,10 @@ export default function Registrations() {
               <Trash2 className="h-5 w-5" />
               Confirmar Exclusão
             </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
+            <DialogDescription>
               Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
-            </p>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">
               Cancelar

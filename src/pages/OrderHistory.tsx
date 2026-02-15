@@ -16,6 +16,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Search, Calendar, Filter, FileText, ChevronRight, MapPin, Bike, Store, Smartphone } from "lucide-react";
 import axios from "axios";
@@ -189,6 +190,10 @@ export default function OrderHistory() {
             {/* Order Details Modal */}
             <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
                 <DialogContent className="sm:max-w-[500px] rounded-[32px] overflow-hidden p-0">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Detalhes do Pedido</DialogTitle>
+                        <DialogDescription>Visualize os itens e totais do pedido selecionado.</DialogDescription>
+                    </DialogHeader>
                     {selectedOrder && (
                         <div className="flex flex-col">
                             <div className="p-8 pb-4">
