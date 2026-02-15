@@ -84,11 +84,9 @@ export default function Sales() {
   };
 
   const categories = useMemo(() => {
-    const rawCats = Array.from(new Set(products.map((p) => p.category)));
-    // Garantir que as categorias venham na ordem: Todos, lanches, bebidas, Porções
-    const ordered = ["burgers", "drinks", "portions"].filter(c => rawCats.includes(c as any));
-    return ["Todos", ...ordered];
-  }, [products]);
+    // Sempre mostrar todas as categorias, independente de ter produtos
+    return ["Todos", "burgers", "drinks", "portions"];
+  }, []);
 
   const activeOrderId = editOrderId || (orderType === "table" && orders.find(o => o.table_id === selectedTable && o.status !== "Concluído" && o.status !== "Cancelado")?.id);
 
