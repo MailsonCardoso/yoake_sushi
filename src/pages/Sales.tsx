@@ -30,9 +30,13 @@ import {
   Utensils,
   Coffee,
   Pizza,
-  XCircle,
   Hash,
-  Search
+  Search,
+  Lock,
+  Unlock,
+  CreditCard,
+  Banknote,
+  Pix
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +68,13 @@ export default function Sales() {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [productSearch, setProductSearch] = useState("");
+
+  const { cashStatus, openCash, closeCash } = useApp();
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [openingBalance, setOpeningBalance] = useState("");
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentAccount, setSelectedPaymentAccount] = useState<string>("");
 
   useEffect(() => {
     if (location.state?.tableId) {
@@ -255,12 +266,30 @@ export default function Sales() {
       return;
     }
 
+    if (cashStatus?.status !== 'open') {
+      toast({ title: "Caixa Fechado", description: "Você precisa abrir o caixa para realizar vendas.", variant: "destructive" });
+      setShowCashModal(true);
+      return;
+    }
+
     const isDeliveryOrder = orderType === "delivery" && orderChannel !== "iFood";
 
     if (isDeliveryOrder && !deliveryAddress) {
       toast({ title: "Endereço obrigatório para Delivery", variant: "destructive" });
       return;
     }
+
+    // Se o canal for iFood, ignorar modal de pagamento e salvar como IFOOD
+    if (orderChannel === "iFood") {
+      confirmSendOrder("IFOOD");
+      return;
+    }
+
+    setShowPaymentModal(true);
+  };
+
+  const confirmSendOrder = (account: string) => {
+    const isDeliveryOrder = orderType === "delivery" && orderChannel !== "iFood";
 
     addOrder({
       items: cart.map(i => ({
@@ -278,6 +307,8 @@ export default function Sales() {
       delivery_location_link: isDeliveryOrder ? deliveryLocationLink : undefined,
       delivery_fee: isDeliveryOrder ? deliveryFee : 0,
       distance_km: isDeliveryOrder ? calculatedDistance : 0,
+      payment_account: account,
+      cash_register_id: cashStatus?.register?.id
     });
 
     setCart([]);
@@ -289,6 +320,7 @@ export default function Sales() {
     setDeliveryFee(0);
     setCalculatedDistance(0);
     setSelectedTable("");
+    setShowPaymentModal(false);
   };
 
   return (
@@ -300,302 +332,325 @@ export default function Sales() {
             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Novo Pedido</h1>
             <p className="text-slate-400 font-medium">Selecione os itens para adicionar ao carrinho</p>
           </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar no cardápio..."
-              className="pl-10 h-10 rounded-xl bg-white border-slate-200 focus:ring-indigo-500 text-sm shadow-sm"
-              value={productSearch}
-              onChange={(e) => setProductSearch(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
-          {categories.map((cat) => (
-            <button
-              key={cat.name}
-              onClick={() => setSelectedCategory(cat.name)}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
               className={cn(
-                "flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border-2",
-                selectedCategory === cat.name
-                  ? "bg-[#6366f1] text-white border-[#6366f1] shadow-lg shadow-indigo-100"
-                  : "bg-white text-slate-500 border-transparent hover:border-slate-200"
+                "h-12 px-6 rounded-2xl font-bold border-2 transition-all",
+                cashStatus?.status === 'open'
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
+                  : "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100"
               )}
-            >
-              <cat.icon className={cn("h-4 w-4", selectedCategory === cat.name ? "text-white" : "text-slate-400")} />
-              <span className="text-sm">{cat.label || cat.name}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="group p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[140px] relative"
-            >
-              <div className="flex-1 mb-3">
-                <h3 className="font-bold text-slate-800 text-base leading-tight mb-1">{product.name}</h3>
-                {product.description && (
-                  <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description}</p>
-                )}
-              </div>
-              <div className="flex items-center justify-between mt-auto">
-                <span className="text-lg font-black text-[#6366f1]">
-                  R$ {Number(product.price).toFixed(2).replace(".", ",")}
-                </span>
-                <Button
-                  size="icon"
-                  className="rounded-full bg-[#f0f4ff] hover:bg-[#6366f1] text-[#6366f1] hover:text-white transition-all shadow-none"
-                  onClick={() => addToCart(product)}
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Right: Cart Sidebar */}
-      <div className="w-[400px] border-l border-slate-200 bg-white flex flex-col shadow-2xl z-20">
-        {/* Order Type Filter (4 Options) */}
-        <div className="p-6">
-          <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 flex-wrap">
-            {[
-              { id: "ifood", label: "IFOOD", type: "delivery", channel: "iFood" },
-              { id: "balcao", label: "BALCÃO", type: "counter", channel: "Balcão" },
-              { id: "mesa", label: "MESA", type: "table", channel: "Balcão" },
-              { id: "delivery", label: "DELIVERY", type: "delivery", channel: "WhatsApp" },
-            ].map((opt) => {
-              const isActive =
-                (opt.id === "ifood" && orderChannel === "iFood" && orderType === "delivery") ||
-                (opt.id === "balcao" && orderType === "counter") ||
-                (opt.id === "mesa" && orderType === "table") ||
-                (opt.id === "delivery" && orderType === "delivery" && orderChannel !== "iFood");
-
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => {
-                    setOrderType(opt.type as any);
-                    setOrderChannel(opt.channel);
-                    // Reset fee if not standard delivery
-                    if (!(opt.type === "delivery" && opt.channel !== "iFood")) {
-                      setDeliveryFee(0);
-                    }
-                  }}
-                  className={cn(
-                    "flex-1 py-3 px-2 rounded-xl text-[10px] font-black transition-all",
-                    isActive ? "bg-white text-[#6366f1] shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/50"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Action Form */}
-        <div className="px-6 space-y-4 mb-6">
-          <div className="relative">
-            <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar Cliente (Nome ou Celular)..."
-              className="pl-11 pr-10 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCustomerName(e.target.value);
-                setShowCustomerDropdown(true);
+              onClick={() => {
+                if (cashStatus?.status === 'closed') {
+                  setOpeningBalance(String(cashStatus.last_closing_balance || "0"));
+                }
+                setShowCashModal(true);
               }}
-              onFocus={() => setShowCustomerDropdown(true)}
-            />
-            {searchTerm && (
-              <button
-                className="absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors"
-                onClick={() => {
-                  setSearchTerm("");
-                  setCustomerName("");
-                  setCustomerId("");
-                  setDeliveryAddress("");
-                  setDeliveryLocationLink("");
-                  setCustomerLatLng({});
-                  setDeliveryFee(0);
-                }}
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-            )}
-
-            {showCustomerDropdown && filteredCustomers.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
-                {filteredCustomers.map((c, idx) => (
-                  <div
-                    key={`${c.id}-${idx}`}
-                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col border-b border-slate-50 last:border-0"
-                    onMouseDown={() => handleCustomerSelect(c)}
-                  >
-                    <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-black text-sm text-slate-800">{c.name}</span>
-                      <span className="text-[10px] text-[#6366f1] font-black">{c.phone || "Sem Telefone"}</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 truncate flex items-center gap-1">
-                      <MapPin className="h-2 w-2" /> {c.address || "Sem endereço cadastrado"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {showCustomerDropdown && searchTerm && filteredCustomers.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-4 text-center">
-                <p className="text-xs text-slate-400 font-bold">Nenhum cliente encontrado</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 text-[10px] text-indigo-600 font-black h-7"
-                  onClick={() => setShowCustomerDropdown(false)}
-                >
-                  Cadastrar como novo
-                </Button>
-              </div>
-            )}
+            >
+              {cashStatus?.status === 'open' ? (
+                <><Unlock className="h-4 w-4 mr-2" /> Caixa Aberto</>
+              ) : (
+                <><Lock className="h-4 w-4 mr-2" /> Caixa Fechado</>
+              )}
+            </Button>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar no cardápio..."
+                className="pl-10 h-10 rounded-xl bg-white border-slate-200 focus:ring-indigo-500 text-sm shadow-sm"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          {(orderType === "delivery" && orderChannel !== "iFood") ? (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Endereço ou Link do Maps (Obrigatório)..."
-                  className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm border-red-100"
-                  value={deliveryAddress}
-                  onChange={(e) => handleAddressChange(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="secondary"
-                className="h-10 w-10 rounded-xl bg-[#6366f1] text-white hover:bg-[#4f46e5] font-bold p-0 text-[10px] shadow-lg shadow-indigo-100"
-                onClick={simulateDistance}
+          {/* Categories */}
+          <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
+            {categories.map((cat) => (
+              <button
+                key={cat.name}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border-2",
+                  selectedCategory === cat.name
+                    ? "bg-[#6366f1] text-white border-[#6366f1] shadow-lg shadow-indigo-100"
+                    : "bg-white text-slate-500 border-transparent hover:border-slate-200"
+                )}
               >
-                Calc
-              </Button>
-            </div>
-          ) : (
-            orderType === "table" ? (
-              <div className="relative">
-                <Hash className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
-                <Select value={selectedTable} onValueChange={setSelectedTable}>
-                  <SelectTrigger className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white outline-none text-sm">
-                    <SelectValue placeholder="Selecionar Mesa..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {freeTables.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>Mesa {t.number}</SelectItem>
-                    ))}
-                    {freeTables.length === 0 && <SelectItem value="none" disabled>Nenhuma mesa livre</SelectItem>}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null
-          )}
+                <cat.icon className={cn("h-4 w-4", selectedCategory === cat.name ? "text-white" : "text-slate-400")} />
+                <span className="text-sm">{cat.label || cat.name}</span>
+              </button>
+            ))}
+          </div>
 
-          <div className="flex gap-2 pt-2">
-            {(orderType === "delivery" && orderChannel !== "iFood") && (
-              <div className="flex items-center gap-2 w-full pt-2">
-                <Badge variant="outline" className="h-10 shrink-0 justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
-                  Taxa Entrega
-                </Badge>
+          {/* Product Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                className="group p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[140px] relative"
+              >
+                <div className="flex-1 mb-3">
+                  <h3 className="font-bold text-slate-800 text-base leading-tight mb-1">{product.name}</h3>
+                  {product.description && (
+                    <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-lg font-black text-[#6366f1]">
+                    R$ {Number(product.price).toFixed(2).replace(".", ",")}
+                  </span>
+                  <Button
+                    size="icon"
+                    className="rounded-full bg-[#f0f4ff] hover:bg-[#6366f1] text-[#6366f1] hover:text-white transition-all shadow-none"
+                    onClick={() => addToCart(product)}
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Cart Sidebar */}
+        <div className="w-[400px] border-l border-slate-200 bg-white flex flex-col shadow-2xl z-20">
+          {/* Order Type Filter (4 Options) */}
+          <div className="p-6">
+            <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 flex-wrap">
+              {[
+                { id: "ifood", label: "IFOOD", type: "delivery", channel: "iFood" },
+                { id: "balcao", label: "BALCÃO", type: "counter", channel: "Balcão" },
+                { id: "mesa", label: "MESA", type: "table", channel: "Balcão" },
+                { id: "delivery", label: "DELIVERY", type: "delivery", channel: "WhatsApp" },
+              ].map((opt) => {
+                const isActive =
+                  (opt.id === "ifood" && orderChannel === "iFood" && orderType === "delivery") ||
+                  (opt.id === "balcao" && orderType === "counter") ||
+                  (opt.id === "mesa" && orderType === "table") ||
+                  (opt.id === "delivery" && orderType === "delivery" && orderChannel !== "iFood");
+
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setOrderType(opt.type as any);
+                      setOrderChannel(opt.channel);
+                      // Reset fee if not standard delivery
+                      if (!(opt.type === "delivery" && opt.channel !== "iFood")) {
+                        setDeliveryFee(0);
+                      }
+                    }}
+                    className={cn(
+                      "flex-1 py-3 px-2 rounded-xl text-[10px] font-black transition-all",
+                      isActive ? "bg-white text-[#6366f1] shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/50"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Action Form */}
+          <div className="px-6 space-y-4 mb-6">
+            <div className="relative">
+              <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar Cliente (Nome ou Celular)..."
+                className="pl-11 pr-10 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCustomerName(e.target.value);
+                  setShowCustomerDropdown(true);
+                }}
+                onFocus={() => setShowCustomerDropdown(true)}
+              />
+              {searchTerm && (
+                <button
+                  className="absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCustomerName("");
+                    setCustomerId("");
+                    setDeliveryAddress("");
+                    setDeliveryLocationLink("");
+                    setCustomerLatLng({});
+                    setDeliveryFee(0);
+                  }}
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
+
+              {showCustomerDropdown && filteredCustomers.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                  {filteredCustomers.map((c, idx) => (
+                    <div
+                      key={`${c.id}-${idx}`}
+                      className="w-full text-left px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors flex flex-col border-b border-slate-50 last:border-0"
+                      onMouseDown={() => handleCustomerSelect(c)}
+                    >
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="font-black text-sm text-slate-800">{c.name}</span>
+                        <span className="text-[10px] text-[#6366f1] font-black">{c.phone || "Sem Telefone"}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                        <MapPin className="h-2 w-2" /> {c.address || "Sem endereço cadastrado"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showCustomerDropdown && searchTerm && filteredCustomers.length === 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-4 text-center">
+                  <p className="text-xs text-slate-400 font-bold">Nenhum cliente encontrado</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 text-[10px] text-indigo-600 font-black h-7"
+                    onClick={() => setShowCustomerDropdown(false)}
+                  >
+                    Cadastrar como novo
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {(orderType === "delivery" && orderChannel !== "iFood") ? (
+              <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-3 text-xs font-bold text-slate-500">R$</span>
+                  <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                   <Input
-                    type="number"
-                    step="1.00"
-                    className="pl-8 h-10 rounded-xl bg-white border-indigo-100 text-indigo-700 font-black text-sm shadow-sm focus:ring-indigo-500"
-                    value={deliveryFee}
-                    onChange={(e) => setDeliveryFee(Number(e.target.value))}
-                    placeholder="0.00"
+                    placeholder="Endereço ou Link do Maps (Obrigatório)..."
+                    className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white transition-all text-sm border-red-100"
+                    value={deliveryAddress}
+                    onChange={(e) => handleAddressChange(e.target.value)}
                   />
                 </div>
+                <Button
+                  variant="secondary"
+                  className="h-10 w-10 rounded-xl bg-[#6366f1] text-white hover:bg-[#4f46e5] font-bold p-0 text-[10px] shadow-lg shadow-indigo-100"
+                  onClick={simulateDistance}
+                >
+                  Calc
+                </Button>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Cart Items */}
-        <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
-          {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-300">
-              <ShoppingCart className="h-20 w-20 mb-4 opacity-20" />
-              <p className="font-bold text-lg opacity-40 italic">Carrinho vazio</p>
-            </div>
-          ) : (
-            cart.map((item) => (
-              <div key={item.product.id} className="flex items-center justify-between group">
-                <div className="flex-1 min-w-0 pr-4">
-                  <p className="font-black text-slate-800 text-sm truncate">{item.product.name}</p>
-                  <p className="text-xs text-[#6366f1] font-bold">R$ {Number(item.product.price).toFixed(2)}</p>
+            ) : (
+              orderType === "table" ? (
+                <div className="relative">
+                  <Hash className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
+                  <Select value={selectedTable} onValueChange={setSelectedTable}>
+                    <SelectTrigger className="pl-11 h-10 rounded-xl bg-slate-50 border-transparent focus:bg-white outline-none text-sm">
+                      <SelectValue placeholder="Selecionar Mesa..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {freeTables.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>Mesa {t.number}</SelectItem>
+                      ))}
+                      {freeTables.length === 0 && <SelectItem value="none" disabled>Nenhuma mesa livre</SelectItem>}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  <button
-                    onClick={() => updateQuantity(item.product.id, -1)}
-                    className="h-7 w-7 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-destructive transition-colors shadow-sm"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-4 text-center text-xs font-black text-slate-700">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.product.id, 1)}
-                    className="h-7 w-7 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-[#6366f1] transition-colors shadow-sm"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Totals Section */}
-        <div className="p-8 bg-slate-50 border-t border-slate-200 space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-slate-500 font-bold">
-              <span className="text-sm">Subtotal</span>
-              <span className="text-lg">R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
-            </div>
-            {orderType === "delivery" && (
-              <div className="flex justify-between items-center text-slate-400 font-medium">
-                <span className="text-xs">Taxa de Entrega</span>
-                <span className="text-sm">R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
-              </div>
+              ) : null
             )}
-            <div className="flex justify-between items-center pt-2">
-              <span className="text-lg font-black text-slate-800">Total</span>
-              <span className="text-2xl font-black text-[#6366f1]">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
+
+            <div className="flex gap-2 pt-2">
+              {(orderType === "delivery" && orderChannel !== "iFood") && (
+                <div className="flex items-center gap-2 w-full pt-2">
+                  <Badge variant="outline" className="h-10 shrink-0 justify-center px-3 rounded-xl border-dashed border-indigo-200 bg-indigo-50 text-indigo-700 font-bold">
+                    Taxa Entrega
+                  </Badge>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-slate-500">R$</span>
+                    <Input
+                      type="number"
+                      step="1.00"
+                      className="pl-8 h-10 rounded-xl bg-white border-indigo-100 text-indigo-700 font-black text-sm shadow-sm focus:ring-indigo-500"
+                      value={deliveryFee}
+                      onChange={(e) => setDeliveryFee(Number(e.target.value))}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <Button
-              variant="ghost"
-              className="flex-1 h-14 rounded-2xl font-bold text-slate-500 hover:text-destructive transition-colors"
-              onClick={() => setCart([])}
-              disabled={cart.length === 0}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="flex-[2] h-12 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-base shadow-xl shadow-indigo-100 disabled:opacity-50"
-              onClick={handleSendOrder}
-              disabled={cart.length === 0}
-            >
-              Finalizar Pedido
-            </Button>
+          {/* Cart Items */}
+          <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
+            {cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                <ShoppingCart className="h-20 w-20 mb-4 opacity-20" />
+                <p className="font-bold text-lg opacity-40 italic">Carrinho vazio</p>
+              </div>
+            ) : (
+              cart.map((item) => (
+                <div key={item.product.id} className="flex items-center justify-between group">
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="font-black text-slate-800 text-sm truncate">{item.product.name}</p>
+                    <p className="text-xs text-[#6366f1] font-bold">R$ {Number(item.product.price).toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                    <button
+                      onClick={() => updateQuantity(item.product.id, -1)}
+                      className="h-7 w-7 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-destructive transition-colors shadow-sm"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-4 text-center text-xs font-black text-slate-700">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.product.id, 1)}
+                      className="h-7 w-7 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-[#6366f1] transition-colors shadow-sm"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Totals Section */}
+          <div className="p-8 bg-slate-50 border-t border-slate-200 space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-slate-500 font-bold">
+                <span className="text-sm">Subtotal</span>
+                <span className="text-lg">R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
+              </div>
+              {orderType === "delivery" && (
+                <div className="flex justify-between items-center text-slate-400 font-medium">
+                  <span className="text-xs">Taxa de Entrega</span>
+                  <span className="text-sm">R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-lg font-black text-slate-800">Total</span>
+                <span className="text-2xl font-black text-[#6366f1]">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <Button
+                variant="ghost"
+                className="flex-1 h-14 rounded-2xl font-bold text-slate-500 hover:text-destructive transition-colors"
+                onClick={() => setCart([])}
+                disabled={cart.length === 0}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-[2] h-12 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white font-black text-base shadow-xl shadow-indigo-100 disabled:opacity-50"
+                onClick={handleSendOrder}
+                disabled={cart.length === 0}
+              >
+                Finalizar Pedido
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -630,6 +685,151 @@ export default function Sales() {
               Simular Rota
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cash Management Modal */}
+      <Dialog open={showCashModal} onOpenChange={setShowCashModal}>
+        <DialogContent className="sm:max-w-md rounded-[32px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {cashStatus?.status === 'open' ? (
+                <><Unlock className="h-6 w-6 text-emerald-500" /> Fechamento de Caixa</>
+              ) : (
+                <><Lock className="h-6 w-6 text-rose-500" /> Abertura de Caixa</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {cashStatus?.status === 'open' ? (
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-slate-500">
+                  Ao fechar o caixa, todas as vendas do período serão contabilizadas e o status passará para fechado.
+                </p>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                  <div className="flex justify-between text-xs font-black uppercase text-slate-400">
+                    <span>Abertura</span>
+                    <span>R$ {Number(cashStatus.register?.opening_balance).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-[#6366f1]">
+                    <span>Faturamento do Dia</span>
+                    <span>R$ {Number(orders.filter(o => o.cash_register_id === cashStatus.register?.id).reduce((s, o) => s + Number(o.total), 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-slate-600">Informe o saldo inicial do caixa:</p>
+                <div className="relative">
+                  <span className="absolute left-4 top-3.5 text-slate-400 font-bold">R$</span>
+                  <Input
+                    type="number"
+                    className="pl-12 h-14 rounded-2xl text-lg font-black"
+                    value={openingBalance}
+                    onChange={(e) => setOpeningBalance(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                {cashStatus?.last_closing_balance && (
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase italic px-2">
+                    Sugestão baseada no último fechamento: R$ {Number(cashStatus.last_closing_balance).toFixed(2)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold" onClick={() => setShowCashModal(false)}>
+              Sair
+            </Button>
+            {cashStatus?.status === 'open' ? (
+              <Button
+                className="flex-1 rounded-2xl h-12 font-black bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-100 text-white"
+                onClick={() => {
+                  closeCash();
+                  setShowCashModal(false);
+                }}
+              >
+                Encerrar Dia
+              </Button>
+            ) : (
+              <Button
+                className="flex-1 rounded-2xl h-12 font-black bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-100 text-white"
+                onClick={() => {
+                  openCash(Number(openingBalance));
+                  setShowCashModal(false);
+                }}
+              >
+                Abrir Agora
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Selection Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="sm:max-w-md rounded-[32px] p-0 overflow-hidden">
+          <div className="p-8 bg-indigo-600 text-white">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Finalizar Pedido</p>
+            <h2 className="text-3xl font-black mt-1">R$ {grandTotal.toFixed(2).replace('.', ',')}</h2>
+          </div>
+          <div className="p-8 space-y-4">
+            <p className="text-xs font-black uppercase text-slate-400 tracking-widest leading-none">Forma de Pagamento</p>
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                variant="outline"
+                className="h-14 justify-between px-6 rounded-2xl border-2 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-bold group"
+                onClick={() => confirmSendOrder("DINHEIRO")}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-slate-100 group-hover:bg-indigo-100 text-slate-600 group-hover:text-indigo-600">
+                    <Banknote className="h-5 w-5" />
+                  </div>
+                  <span>Dinheiro</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-slate-300" />
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-14 justify-between px-6 rounded-2xl border-2 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-bold group"
+                onClick={() => confirmSendOrder("PIX")}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-slate-100 group-hover:bg-indigo-100 text-slate-600 group-hover:text-indigo-600">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
+                  <span>PIX</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-slate-300" />
+              </Button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-1 rounded-2xl border-2 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-bold text-xs"
+                  onClick={() => confirmSendOrder("NUBANK")}
+                >
+                  <CreditCard className="h-5 w-5 mb-1 text-purple-600" />
+                  CARTÃO NUBANK
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-1 rounded-2xl border-2 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-bold text-xs"
+                  onClick={() => confirmSendOrder("PICPAY")}
+                >
+                  <CreditCard className="h-5 w-5 mb-1 text-emerald-600" />
+                  CARTÃO PICPAY
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 flex justify-center">
+            <Button variant="ghost" className="text-slate-400 font-bold text-xs" onClick={() => setShowPaymentModal(false)}>
+              Voltar ao Carrinho
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

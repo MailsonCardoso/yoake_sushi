@@ -83,6 +83,16 @@ export interface TableData {
   current_order_id?: string;
 }
 
+export interface CashStatus {
+  status: "open" | "closed";
+  register?: {
+    id: string;
+    opening_balance: number;
+    opened_at: string;
+  };
+  last_closing_balance: number;
+}
+
 interface AppContextType {
   products: Product[];
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
@@ -94,6 +104,9 @@ interface AppContextType {
   setTables: React.Dispatch<React.SetStateAction<TableData[]>>;
   settings: Record<string, string>;
   setSettings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  cashStatus: CashStatus | null;
+  openCash: (opening_balance: number) => Promise<void>;
+  closeCash: () => Promise<void>;
   addOrder: (order: any) => Promise<void>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
   fetchData: () => Promise<void>;
@@ -107,22 +120,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [tables, setTables] = useState<TableData[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [cashStatus, setCashStatus] = useState<CashStatus | null>(null);
   const { toast } = useToast();
 
   const fetchData = async () => {
     try {
-      const [resProducts, resCustomers, resOrders, resTables, resSettings] = await Promise.all([
+      const [resProducts, resCustomers, resOrders, resTables, resSettings, resCash] = await Promise.all([
         axios.get(`${API_URL}/products`),
         axios.get(`${API_URL}/customers`),
         axios.get(`${API_URL}/orders?status=active`),
         axios.get(`${API_URL}/tables`),
         axios.get(`${API_URL}/settings`),
+        axios.get(`${API_URL}/cash-register/status`),
       ]);
       setProducts(resProducts.data);
       setCustomers(resCustomers.data);
       setOrders(resOrders.data);
       setTables(resTables.data);
       setSettings(resSettings.data);
+      setCashStatus(resCash.data);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
     }
@@ -160,6 +176,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const openCash = async (opening_balance: number) => {
+    try {
+      await axios.post(`${API_URL}/cash-register/open`, { opening_balance });
+      toast({ title: "Caixa aberto!" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Erro ao abrir caixa", description: error.response?.data?.message, variant: "destructive" });
+    }
+  };
+
+  const closeCash = async () => {
+    try {
+      await axios.post(`${API_URL}/cash-register/close`);
+      toast({ title: "Caixa fechado!" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Erro ao fechar caixa", description: error.response?.data?.message, variant: "destructive" });
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -168,6 +204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         orders, setOrders,
         tables, setTables,
         settings, setSettings,
+        cashStatus, openCash, closeCash,
         addOrder, updateOrderStatus, fetchData
       }}
     >

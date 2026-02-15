@@ -69,6 +69,8 @@ class OrderController extends Controller
             'items.*.product_id' => 'required|uuid',
             'items.*.quantity' => 'required|integer',
             'items.*.unit_price' => 'required|numeric',
+            'cash_register_id' => 'nullable|uuid',
+            'payment_account' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($validated) {

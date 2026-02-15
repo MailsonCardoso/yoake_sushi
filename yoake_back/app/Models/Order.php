@@ -24,6 +24,8 @@ class Order extends Model
         'delivery_fee',
         'distance_km',
         'total',
+        'cash_register_id',
+        'payment_account',
     ];
 
     protected static function boot()

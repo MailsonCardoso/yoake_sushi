@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     // Clientes
     Route::get('/customers', [CustomerController::class, 'index']);
@@ -49,4 +50,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index']);
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store']);
     Route::delete('/users/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
+
+    // Caixa (Cash Register)
+    Route::get('/cash-register/status', [App\Http\Controllers\CashRegisterController::class, 'status']);
+    Route::post('/cash-register/open', [App\Http\Controllers\CashRegisterController::class, 'open']);
+    Route::post('/cash-register/close', [App\Http\Controllers\CashRegisterController::class, 'close']);
+    Route::get('/cash-register/history', [App\Http\Controllers\CashRegisterController::class, 'history']);
 });

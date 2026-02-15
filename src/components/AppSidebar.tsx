@@ -14,12 +14,14 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", path: "/", icon: LayoutDashboard },
+  { title: "Análise Financeira", path: "/finance", icon: TrendingUp },
   { title: "Gestão de Vendas", path: "/sales", icon: ShoppingCart },
   { title: "App do Entregador", path: "/delivery", icon: Bike },
   { title: "Cadastros", path: "/registrations", icon: ClipboardList },
