@@ -13,6 +13,7 @@ import TablesPage from "./pages/TablesPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Delivery from "./pages/Delivery";
+import ActiveOrders from "./pages/ActiveOrders";
 import OrderHistory from "./pages/OrderHistory";
 import TVMonitor from "./pages/TVMonitor";
 import Settings from "./pages/Settings";
@@ -49,6 +50,7 @@ const App = () => (
                       <Route path="/kitchen" element={<Kitchen />} />
                       <Route path="/tables" element={<TablesPage />} />
                       <Route path="/delivery" element={<Delivery />} />
+                      <Route path="/orders" element={<ActiveOrders />} />
                       <Route path="/history" element={<OrderHistory />} />
                       <Route path="/monitor" element={<TVMonitor />} />
                       <Route path="/settings" element={<Settings />} />

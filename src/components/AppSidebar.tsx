@@ -22,9 +22,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", path: "/", icon: LayoutDashboard },
   { title: "Análise Financeira", path: "/finance", icon: TrendingUp },
-  { title: "Gestão de Vendas", path: "/sales", icon: ShoppingCart },
+  { title: "Lançar Pedidos", path: "/sales", icon: ShoppingCart },
+  { title: "Monitor de Pedidos", path: "/orders", icon: ClipboardList },
   { title: "App do Entregador", path: "/delivery", icon: Bike },
-  { title: "Cadastros", path: "/registrations", icon: ClipboardList },
   { title: "Monitor Cozinha (KDS)", path: "/kitchen", icon: ChefHat },
   { title: "Gestão de Mesas", path: "/tables", icon: Grid3X3 },
   { title: "Histórico", path: "/history", icon: Clock3 },

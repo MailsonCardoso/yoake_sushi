@@ -76,6 +76,7 @@ export default function OrderHistory() {
     }, []);
 
     const filteredOrders = allOrders.filter((order) => {
+        const isCompleted = order.status === "Concluído";
         const matchesSearch =
             order.readable_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,7 +84,7 @@ export default function OrderHistory() {
 
         const matchesStatus = statusFilter === "all" || order.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
+        return isCompleted && matchesSearch && matchesStatus;
     });
 
     // Paginating filtered results
