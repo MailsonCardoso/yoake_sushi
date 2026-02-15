@@ -195,50 +195,50 @@ export default function OrderHistory() {
                                                 className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group rounded-[2rem] overflow-hidden bg-white ring-1 ring-slate-200/50"
                                                 onClick={() => setSelectedOrder(order)}
                                             >
-                                                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                                                    <div className="flex items-center gap-4 w-full md:w-auto">
-                                                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                                                            <FileText className="h-5 w-5" />
+                                                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                                                    <div className="flex items-center gap-5 w-full md:w-auto">
+                                                        <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                                            <FileText className="h-7 w-7" />
                                                         </div>
                                                         <div>
-                                                            <p className="font-black text-lg text-slate-800 tabular-nums leading-tight">
+                                                            <p className="font-bold text-xl text-slate-800 tabular-nums">
                                                                 #{getOrderConfig(order).prefix}-{order.readable_id.replace(/\D/g, "")}
                                                             </p>
-                                                            <p className="text-[10px] font-bold text-slate-400">
-                                                                {format(new Date(order.created_at), "HH:mm", { locale: ptBR })}
+                                                            <p className="text-xs font-bold text-slate-400">
+                                                                Lançado às {format(new Date(order.created_at), "HH:mm", { locale: ptBR })}
                                                             </p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-1 items-center gap-8 justify-center">
-                                                        <div className="hidden lg:block min-w-[120px]">
-                                                            <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Cliente / Mesa</p>
-                                                            <p className="text-xs font-bold text-slate-700 truncate max-w-[130px]">
+                                                    <div className="flex flex-1 items-center gap-12 justify-center">
+                                                        <div className="hidden lg:block min-w-[140px]">
+                                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Cliente / Mesa</p>
+                                                            <p className="text-sm font-bold text-slate-700 truncate max-w-[150px]">
                                                                 {order.type === 'mesa' ? `Mesa ${order.table?.number}` : order.customer?.name || "Consumidor Final"}
                                                             </p>
                                                         </div>
                                                         <div className="hidden sm:block">
-                                                            <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Canal</p>
-                                                            <div className={cn("flex items-center gap-1.5 font-bold", getOrderConfig(order).color)}>
+                                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Canal</p>
+                                                            <div className={cn("flex items-center gap-2 font-bold", getOrderConfig(order).color)}>
                                                                 {(() => {
                                                                     const ConfigIcon = getOrderConfig(order).icon;
-                                                                    return <ConfigIcon className="h-3.5 w-3.5" />;
+                                                                    return <ConfigIcon className="h-4 w-4" />;
                                                                 })()}
-                                                                <span className="text-[10px] uppercase tracking-tight">{getOrderConfig(order).label}</span>
+                                                                <span className="text-xs uppercase tracking-tight">{getOrderConfig(order).label}</span>
                                                             </div>
                                                         </div>
                                                         <div className="text-right sm:text-left">
-                                                            <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Total</p>
-                                                            <p className="text-base font-black text-indigo-600 tabular-nums leading-none">R$ {Number(order.total).toFixed(2).replace('.', ',')}</p>
+                                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total</p>
+                                                            <p className="text-lg font-bold text-primary tabular-nums">R$ {Number(order.total).toFixed(2).replace('.', ',')}</p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                                                        <Badge variant={statusMap[order.status]?.variant || "outline"} className="h-7 px-3 rounded-lg font-black text-[9px] uppercase tracking-wider">
+                                                    <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                                                        <Badge variant={statusMap[order.status]?.variant || "outline"} className="h-8 px-4 rounded-xl font-bold text-[10px] uppercase tracking-wider">
                                                             {statusMap[order.status]?.label || order.status}
                                                         </Badge>
-                                                        <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                                                            <ChevronRight className="h-4 w-4" />
+                                                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                                            <ChevronRight className="h-5 w-5" />
                                                         </div>
                                                     </div>
                                                 </CardContent>

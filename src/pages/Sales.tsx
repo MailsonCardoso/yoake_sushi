@@ -218,7 +218,7 @@ export default function Sales() {
         <div className="p-8 pb-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
             <div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Lançar Pedido</h1>
+              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Lançar Pedido</h1>
               <p className="text-slate-400 font-medium">Selecione os itens para adicionar ao carrinho</p>
             </div>
 
@@ -226,7 +226,7 @@ export default function Sales() {
               <Button
                 variant="outline"
                 className={cn(
-                  "h-12 px-6 rounded-2xl font-bold border-2 transition-all w-full sm:w-auto",
+                  "h-12 px-6 rounded-lg font-bold border-2 transition-all w-full sm:w-auto",
                   cashStatus?.status === 'open'
                     ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
                     : "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100"
@@ -249,7 +249,7 @@ export default function Sales() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Buscar no cardápio..."
-                  className="pl-10 h-12 rounded-2xl bg-white border-slate-200 focus:ring-indigo-500 text-sm shadow-sm"
+                  className="pl-10 h-12 rounded-lg bg-white border-slate-200 focus:ring-primary text-sm shadow-sm"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                 />
@@ -261,8 +261,8 @@ export default function Sales() {
             <Button
               variant={selectedCategory === "all" ? "default" : "outline"}
               className={cn(
-                "rounded-xl h-10 px-6 font-bold whitespace-nowrap transition-all",
-                selectedCategory === "all" ? "bg-indigo-600 shadow-lg shadow-indigo-100" : "bg-white border-slate-200"
+                "rounded-lg h-10 px-6 font-bold whitespace-nowrap transition-all",
+                selectedCategory === "all" ? "bg-primary shadow-sm" : "bg-white border-slate-200"
               )}
               onClick={() => setSelectedCategory("all")}
             >
@@ -273,8 +273,8 @@ export default function Sales() {
                 key={cat.id}
                 variant={selectedCategory === cat.id ? "default" : "outline"}
                 className={cn(
-                  "rounded-xl h-10 px-6 font-bold whitespace-nowrap transition-all",
-                  selectedCategory === cat.id ? "bg-indigo-600 shadow-lg shadow-indigo-100" : "bg-white border-slate-200"
+                  "rounded-lg h-10 px-6 font-bold whitespace-nowrap transition-all",
+                  selectedCategory === cat.id ? "bg-primary shadow-sm" : "bg-white border-slate-200"
                 )}
                 onClick={() => setSelectedCategory(cat.id)}
               >
@@ -490,39 +490,39 @@ export default function Sales() {
         </div>
 
         {/* Totals & Summary */}
-        <div className="p-8 bg-slate-50/50 border-t border-slate-100 rounded-t-[40px]">
-          <div className="space-y-3 mb-8">
+        <div className="p-6 bg-slate-50 border-t border-slate-200">
+          <div className="space-y-3 mb-6">
             <div className="flex justify-between items-center text-slate-500">
-              <span className="text-xs font-bold uppercase tracking-wider">Subtotal</span>
+              <span className="text-sm font-medium">Subtotal</span>
               <span className="font-bold tabular-nums">R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
             </div>
             {orderType === "delivery" && (
               <div className="flex justify-between items-center text-slate-500">
-                <span className="text-xs font-bold uppercase tracking-wider">Taxa de Entrega</span>
+                <span className="text-sm font-medium">Taxa de Entrega</span>
                 <span className="font-bold tabular-nums">R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
               </div>
             )}
             <div className="flex justify-between items-end pt-2">
-              <span className="text-xs font-black uppercase text-slate-400 tracking-tighter">Total Geral</span>
-              <span className="text-3xl font-black text-slate-900 leading-none tabular-nums">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
+              <span className="text-sm font-bold text-slate-900">Total Geral</span>
+              <span className="text-2xl font-bold text-slate-900 leading-none tabular-nums">R$ {grandTotal.toFixed(2).replace(".", ",")}</span>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <Button
-              variant="ghost"
-              className="flex-1 h-14 rounded-2xl font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all border border-slate-200"
+              variant="outline"
+              className="flex-1 h-12 rounded-lg font-bold"
               onClick={() => setCart([])}
               disabled={cart.length === 0}
             >
               Limpar
             </Button>
             <Button
-              className="flex-[2] h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl shadow-xl shadow-indigo-200 disabled:opacity-50 transition-all active:scale-[0.98]"
+              className="flex-[2] h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-sm disabled:opacity-50 transition-all"
               onClick={handleSendOrder}
               disabled={cart.length === 0}
             >
-              {activeOrderId ? 'CONFIRMAR ITENS' : 'LANÇAR PEDIDO'}
+              {activeOrderId ? 'Confirmar Itens' : 'Lançar Pedido'}
             </Button>
           </div>
         </div>
