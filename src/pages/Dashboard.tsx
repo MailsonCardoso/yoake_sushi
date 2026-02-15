@@ -9,6 +9,8 @@ import {
   AlertTriangle,
   Clock,
   TrendingUp,
+  Utensils,
+  ExternalLink,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -24,10 +26,17 @@ export default function Dashboard() {
       .reduce((sum, o) => sum + Number(o.total), 0);
   };
 
+  const revenueByType = (type: string) => {
+    return orders
+      .filter(o => o.type === type)
+      .reduce((sum, o) => sum + Number(o.total), 0);
+  };
+
   const kpis = [
-    { title: "iFood", value: `R$ ${revenueByChannel("iFood").toFixed(2)}`, icon: Smartphone, colorClass: "kpi-ifood" },
-    { title: "Balcão", value: `R$ ${revenueByChannel("Balcão").toFixed(2)}`, icon: Store, colorClass: "kpi-counter" },
-    { title: "WhatsApp", value: `R$ ${revenueByChannel("WhatsApp").toFixed(2)}`, icon: Truck, colorClass: "kpi-delivery" },
+    { title: "iFood", value: `R$ ${revenueByChannel("iFood").toFixed(2).replace(".", ",")}`, icon: Smartphone, colorClass: "kpi-ifood" },
+    { title: "Balcão", value: `R$ ${revenueByChannel("Balcão").toFixed(2).replace(".", ",")}`, icon: Store, colorClass: "kpi-counter" },
+    { title: "WhatsApp", value: `R$ ${revenueByChannel("WhatsApp").toFixed(2).replace(".", ",")}`, icon: Truck, colorClass: "kpi-delivery" },
+    { title: "Mesas", value: `R$ ${revenueByType("mesa").toFixed(2).replace(".", ",")}`, icon: Utensils, colorClass: "bg-indigo-500/10 text-indigo-500" },
     { title: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, colorClass: "kpi-total" },
   ];
 
@@ -49,7 +58,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi) => (
           <Card key={kpi.title} className="border-none shadow-sm">
             <CardContent className="p-5">
@@ -117,10 +126,6 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="p-3 rounded-lg bg-destructive/10 text-sm">
-              <p className="font-medium text-destructive">Estoque Baixo</p>
-              <p className="text-muted-foreground mt-1">Ingredientes de Sushi - verificar estoque</p>
-            </div>
             <div className="p-3 rounded-lg bg-status-payment/10 text-sm">
               <p className="font-medium text-status-payment">Fluxo de Caixa</p>
               <p className="text-muted-foreground mt-1">Grande volume de pedidos pelo iFood hoje</p>

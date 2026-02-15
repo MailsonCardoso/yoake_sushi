@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, Calendar, Filter, FileText, ChevronRight, MapPin, Bike, Store, Smartphone } from "lucide-react";
+import { Search, Calendar, Filter, FileText, AlertTriangle, Clock, TrendingUp, Utensils, ExternalLink, ChevronRight, MapPin, Bike, Store, Smartphone } from "lucide-react";
 import axios from "axios";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -216,10 +216,33 @@ export default function OrderHistory() {
                                         <MapPin className="h-5 w-5 text-slate-400" />
                                         <div>
                                             <p className="text-[10px] font-black uppercase text-slate-400 leading-none">Origem / Destino</p>
-                                            <p className="text-sm font-bold text-slate-700 mt-1">
-                                                {selectedOrder.type === 'mesa' ? `Atendimento em Mesa (${selectedOrder.table?.number})` :
-                                                    selectedOrder.type === 'delivery' ? `Entrega: ${selectedOrder.delivery_address}` : "Venda Direta / Balcão"}
-                                            </p>
+                                            <div className="mt-1">
+                                                {selectedOrder.type === 'mesa' ? (
+                                                    <p className="text-sm font-bold text-slate-700">
+                                                        Atendimento em Mesa ({selectedOrder.table?.number})
+                                                    </p>
+                                                ) : selectedOrder.type === 'delivery' ? (
+                                                    <div className="flex flex-col gap-1">
+                                                        {selectedOrder.delivery_address && (selectedOrder.delivery_address.includes('http') || selectedOrder.delivery_address.includes('maps')) ? (
+                                                            <div className="flex flex-col gap-2">
+                                                                <p className="text-sm font-bold text-slate-700">Entrega via Localização:</p>
+                                                                <Button variant="outline" size="sm" className="h-8 justify-start gap-2 text-indigo-600 bg-indigo-50 border-indigo-100 font-bold text-xs" asChild>
+                                                                    <a href={selectedOrder.delivery_address} target="_blank" rel="noopener noreferrer">
+                                                                        <ExternalLink className="h-3 w-3" />
+                                                                        Abrir Localização no Maps
+                                                                    </a>
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm font-bold text-slate-700">
+                                                                Entrega: {selectedOrder.delivery_address}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm font-bold text-slate-700">Venda Direta / Balcão</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
