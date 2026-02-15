@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useApp, Product } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,8 @@ import {
   CreditCard,
   Banknote,
   Pix,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +51,7 @@ const categories = [
 ];
 
 export default function Sales() {
+  const navigate = useNavigate();
   const { products, customers, orders, tables, addOrder, addItemsToOrder, payOrder, settings } = useApp();
   const { toast } = useToast();
   const location = useLocation();
@@ -84,15 +86,41 @@ export default function Sales() {
     if (location.state?.tableId) {
       setOrderType("table");
       setSelectedTable(location.state.tableId);
+    } else if (location.state?.editOrderId) {
+      const orderId = location.state.editOrderId;
+      setActiveOrderId(orderId);
+
+      // Busca detalhes do pedido para configurar a tela
+      axios.get(`https://api2.platformx.com.br/api/orders/${orderId}`)
+        .then(res => {
+          const order = res.data;
+          setActiveOrderItems(order.items || []);
+
+          if (order.type === 'delivery') {
+            setOrderType('delivery');
+            setOrderChannel(order.channel);
+            setCustomerName(order.customer?.name || "");
+            setCustomerId(order.customer_id || "");
+            setDeliveryAddress(order.delivery_address || "");
+            setDeliveryFee(Number(order.delivery_fee) || 0);
+          } else if (order.type === 'balcao') {
+            setOrderType('counter');
+            setOrderChannel('Balcão');
+          } else if (order.type === 'mesa') {
+            setOrderType('table');
+            setSelectedTable(order.table_id || "");
+          }
+        })
+        .catch(err => console.error("Erro ao carregar pedido para edição", err));
     }
   }, [location.state]);
 
   useEffect(() => {
-    if (orderType === 'table' && selectedTable) {
+    // Só carrega automaticamente se for MESA e não estivermos vindo de um edit específico do histórico
+    if (orderType === 'table' && selectedTable && !location.state?.editOrderId) {
       const table = tables.find(t => t.id === selectedTable);
       if (table?.current_order_id) {
         setActiveOrderId(table.current_order_id);
-        // Tenta achar nos últimos pedidos ou busca detalhes
         axios.get(`https://api2.platformx.com.br/api/orders/${table.current_order_id}`)
           .then(res => {
             setActiveOrderItems(res.data.items || []);
@@ -102,11 +130,11 @@ export default function Sales() {
         setActiveOrderId(null);
         setActiveOrderItems([]);
       }
-    } else {
+    } else if (!location.state?.editOrderId) {
       setActiveOrderId(null);
       setActiveOrderItems([]);
     }
-  }, [selectedTable, orderType, tables]);
+  }, [selectedTable, orderType, tables, location.state]);
 
   const filteredProducts = useMemo(
     () => {
@@ -130,6 +158,18 @@ export default function Sales() {
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0);
   const activeItemsTotal = activeOrderItems.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
   const grandTotal = cartTotal + activeItemsTotal + (orderType === "delivery" ? deliveryFee : 0);
+
+  const resetEditMode = () => {
+    setCart([]);
+    setCustomerName("");
+    setCustomerId("");
+    setSearchTerm("");
+    setDeliveryAddress("");
+    setDeliveryFee(0);
+    setActiveOrderId(null);
+    setActiveOrderItems([]);
+    navigate('/sales', { replace: true, state: {} });
+  };
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -503,6 +543,21 @@ export default function Sales() {
 
       {/* Right Sidebar: Cart & Order Info */}
       <div className="w-[420px] bg-white border-l border-slate-200 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.02)] z-30">
+        {location.state?.editOrderId && (
+          <div className="bg-indigo-600 p-3 flex items-center justify-between text-white">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-[10px] font-black uppercase tracking-wider">Editando Pedido</span>
+            </div>
+            <button
+              onClick={resetEditMode}
+              className="p-1 hover:bg-white/20 rounded-lg transition-all"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Order Type Selector */}
         <div className="p-6 border-b border-slate-50">
           <div className="bg-slate-100 p-1.5 rounded-2xl flex gap-1">

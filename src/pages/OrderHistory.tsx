@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp, Order } from "@/contexts/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, Calendar, Filter, FileText, AlertTriangle, Clock, TrendingUp, Utensils, ExternalLink, ChevronRight, MapPin, Bike, Store, Smartphone } from "lucide-react";
+import { Search, Calendar, Filter, FileText, AlertTriangle, Clock, TrendingUp, Utensils, ExternalLink, ChevronRight, MapPin, Bike, Store, Smartphone, Plus } from "lucide-react";
 import axios from "axios";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,6 +50,7 @@ const getOrderConfig = (order: Order) => {
 };
 
 export default function OrderHistory() {
+    const navigate = useNavigate();
     const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -278,9 +280,21 @@ export default function OrderHistory() {
                                     <span>Total</span>
                                     <span>R$ {Number(selectedOrder.total).toFixed(2).replace('.', ',')}</span>
                                 </div>
-                                <p className="text-center text-[10px] font-bold text-slate-400 mt-6 uppercase tracking-widest">
+                                <p className="text-center text-[10px] font-bold text-slate-400 mt-6 mb-4 uppercase tracking-widest">
                                     Canal de Venda: {selectedOrder.channel}
                                 </p>
+
+                                {selectedOrder.status !== "Concluído" && (
+                                    <div className="px-8 pb-8">
+                                        <Button
+                                            className="w-full h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black gap-2 shadow-lg shadow-indigo-100"
+                                            onClick={() => navigate('/sales', { state: { editOrderId: selectedOrder.id } })}
+                                        >
+                                            <Plus className="h-5 w-5" />
+                                            Adicionar Itens
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
