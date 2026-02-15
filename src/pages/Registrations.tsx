@@ -208,6 +208,7 @@ export default function Registrations() {
                     <div className="flex flex-col">
                       <span className="font-bold text-sm leading-tight">{product.name}</span>
                       <div className="flex items-center gap-2 mt-1">
+                        {/* Categoria do produto */}
                         <Badge variant="outline" className="text-[10px] uppercase h-4 px-1">{product.category}</Badge>
                       </div>
                       {product.description && (
