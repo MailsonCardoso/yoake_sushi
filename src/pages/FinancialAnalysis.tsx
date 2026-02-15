@@ -148,7 +148,7 @@ export default function FinancialAnalysis() {
                                                 <div className="text-right">
                                                     <p className="text-[10px] font-black text-slate-400 uppercase">Vendas</p>
                                                     <p className="text-sm font-black text-indigo-600">
-                                                        + R$ {(reg.total_cash + reg.total_nubank + reg.total_picpay + reg.total_pix + reg.total_ifood).toFixed(2)}
+                                                        + R$ {(Number(reg.total_cash) + Number(reg.total_nubank) + Number(reg.total_picpay) + Number(reg.total_pix) + Number(reg.total_ifood)).toFixed(2)}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
