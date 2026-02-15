@@ -49,7 +49,7 @@ const categories = [
 ];
 
 export default function Sales() {
-  const { products, customers, tables, addOrder, settings } = useApp();
+  const { products, customers, orders, tables, addOrder, settings } = useApp();
   const { toast } = useToast();
   const location = useLocation();
 
