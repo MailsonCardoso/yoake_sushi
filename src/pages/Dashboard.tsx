@@ -35,7 +35,7 @@ export default function Dashboard() {
   const kpis = [
     { title: "iFood", value: `R$ ${revenueByChannel("iFood").toFixed(2).replace(".", ",")}`, icon: Smartphone, colorClass: "kpi-ifood" },
     { title: "Balcão", value: `R$ ${revenueByChannel("Balcão").toFixed(2).replace(".", ",")}`, icon: Store, colorClass: "kpi-counter" },
-    { title: "WhatsApp", value: `R$ ${revenueByChannel("WhatsApp").toFixed(2).replace(".", ",")}`, icon: Truck, colorClass: "kpi-delivery" },
+    { title: "Delivery", value: `R$ ${revenueByChannel("WhatsApp").toFixed(2).replace(".", ",")}`, icon: Truck, colorClass: "kpi-delivery" },
     { title: "Mesas", value: `R$ ${revenueByType("mesa").toFixed(2).replace(".", ",")}`, icon: Utensils, colorClass: "bg-indigo-500/10 text-indigo-500" },
     { title: "Receita Total", value: `R$ ${totalRevenue.toFixed(2).replace(".", ",")}`, icon: DollarSign, colorClass: "kpi-total" },
   ];
