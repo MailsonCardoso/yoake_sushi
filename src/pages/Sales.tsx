@@ -355,7 +355,7 @@ export default function Sales() {
                 <><Lock className="h-4 w-4 mr-2" /> Caixa Fechado</>
               )}
             </Button>
-            <div className="relative w-full md:w-64">
+            <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Buscar no cardápio..."
@@ -368,13 +368,13 @@ export default function Sales() {
         </div>
 
         {/* Categories */}
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2 no-scrollbar">
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((cat) => (
             <button
               key={cat.name}
               onClick={() => setSelectedCategory(cat.name)}
               className={cn(
-                "flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border-2 shrink-0",
+                "flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border-2",
                 selectedCategory === cat.name
                   ? "bg-[#6366f1] text-white border-[#6366f1] shadow-lg shadow-indigo-100"
                   : "bg-white text-slate-500 border-transparent hover:border-slate-200"
@@ -387,28 +387,28 @@ export default function Sales() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="group p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[140px] relative"
+              className="group p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[140px] relative"
             >
-              <div className="flex-1 mb-2">
-                <h3 className="font-bold text-slate-800 text-sm leading-tight mb-1">{product.name}</h3>
+              <div className="flex-1 mb-3">
+                <h3 className="font-bold text-slate-800 text-base leading-tight mb-1">{product.name}</h3>
                 {product.description && (
-                  <p className="text-[9px] text-slate-400 font-medium line-clamp-2">{product.description}</p>
+                  <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{product.description}</p>
                 )}
               </div>
               <div className="flex items-center justify-between mt-auto">
-                <span className="text-base font-black text-[#6366f1]">
+                <span className="text-lg font-black text-[#6366f1]">
                   R$ {Number(product.price).toFixed(2).replace(".", ",")}
                 </span>
                 <Button
                   size="icon"
-                  className="h-8 w-8 rounded-full bg-[#f0f4ff] hover:bg-[#6366f1] text-[#6366f1] hover:text-white transition-all shadow-none"
+                  className="rounded-full bg-[#f0f4ff] hover:bg-[#6366f1] text-[#6366f1] hover:text-white transition-all shadow-none"
                   onClick={() => addToCart(product)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </Button>
               </div>
             </div>
