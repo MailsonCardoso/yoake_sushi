@@ -285,12 +285,12 @@ export default function Sales() {
         </div>
 
         {/* Products Grid */}
-        <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {(filteredProducts || []).map((p) => (
               <Card
                 key={p.id}
-                className="group border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer rounded-3xl overflow-hidden bg-white"
+                className="group border-none shadow-sm hover:shadow-md transition-all cursor-pointer rounded-2xl overflow-hidden bg-white"
                 onClick={() => addToCart(p)}
               >
                 <div className="aspect-square relative overflow-hidden bg-slate-100">
@@ -302,18 +302,18 @@ export default function Sales() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-300">
-                      <ShoppingCart className="h-10 w-10" />
+                      <ShoppingCart className="h-8 w-8" />
                     </div>
                   )}
-                  <div className="absolute top-3 right-3">
-                    <Button size="icon" className="h-8 w-8 rounded-xl bg-white/90 backdrop-blur-md text-slate-900 shadow-sm hover:bg-white border-none">
+                  <div className="absolute top-2 right-2">
+                    <Button size="icon" className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 shadow-sm border-none">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-bold text-slate-800 text-sm line-clamp-1 mb-1">{p.name}</h3>
-                  <p className="text-indigo-600 font-black text-lg">
+                <CardContent className="p-3">
+                  <h3 className="font-bold text-slate-800 text-xs line-clamp-1 mb-0.5">{p.name}</h3>
+                  <p className="text-indigo-600 font-black text-sm">
                     R$ {Number(p.price).toFixed(2).replace(".", ",")}
                   </p>
                 </CardContent>
