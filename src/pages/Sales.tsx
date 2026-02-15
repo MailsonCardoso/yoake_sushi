@@ -31,7 +31,8 @@ import {
   Coffee,
   Pizza,
   XCircle,
-  Hash
+  Hash,
+  Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +63,7 @@ export default function Sales() {
   const [calculatedDistance, setCalculatedDistance] = useState(0);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [productSearch, setProductSearch] = useState("");
 
   useEffect(() => {
     if (location.state?.tableId) {
@@ -71,11 +73,21 @@ export default function Sales() {
   }, [location.state]);
 
   const filteredProducts = useMemo(
-    () =>
-      selectedCategory === "Todos"
+    () => {
+      let result = selectedCategory === "Todos"
         ? products
-        : products.filter((p) => p.category === selectedCategory),
-    [products, selectedCategory]
+        : products.filter((p) => p.category === selectedCategory);
+
+      if (productSearch) {
+        const lowerSearch = productSearch.toLowerCase();
+        result = result.filter(p =>
+          p.name.toLowerCase().includes(lowerSearch) ||
+          (p.description && p.description.toLowerCase().includes(lowerSearch))
+        );
+      }
+      return result;
+    },
+    [products, selectedCategory, productSearch]
   );
 
   const freeTables = tables.filter((t) => t.status === "Livre");
@@ -281,11 +293,25 @@ export default function Sales() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8fafc]">
-      {/* Left: Products Section */}
-      <div className="flex-1 flex flex-col p-6 overflow-auto">
-        <h1 className="text-xl font-black text-slate-800 mb-6">Pedidos (PDV)</h1>
+      {/* Left: Product Selection */}
+      <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Novo Pedido</h1>
+            <p className="text-slate-400 font-medium">Selecione os itens para adicionar ao carrinho</p>
+          </div>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Buscar no cardápio..."
+              className="pl-10 h-10 rounded-xl bg-white border-slate-200 focus:ring-indigo-500 text-sm shadow-sm"
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+            />
+          </div>
+        </div>
 
-        {/* Categories Bar */}
+        {/* Categories */}
         <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((cat) => (
             <button
