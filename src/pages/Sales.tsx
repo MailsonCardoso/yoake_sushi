@@ -215,14 +215,25 @@ export default function Sales() {
 
         {/* Order Type Tabs */}
         <div className="flex gap-2 mb-6">
-          {(["table", "counter", "delivery"] as const).map((type) => (
+          {(["table", "counter", "delivery", "ifood"] as const).map((type) => (
             <Button
               key={type}
-              variant={orderType === type ? "default" : "outline"}
-              onClick={() => { setOrderType(type); if (type !== "delivery") setOrderChannel("Balcão"); }}
+              variant={orderType === (type === "ifood" ? "delivery" : type) && (type !== "ifood" || orderChannel === "iFood") ? "default" : "outline"}
+              onClick={() => {
+                if (type === "ifood") {
+                  setOrderType("delivery");
+                  setOrderChannel("iFood");
+                } else {
+                  setOrderType(type);
+                  setOrderChannel("Balcão");
+                }
+              }}
               className="px-6"
             >
-              {type === "table" ? <><TableIcon className="h-4 w-4 mr-2" /> Mesa</> : type === "counter" ? <><User className="h-4 w-4 mr-2" /> Balcão</> : <><Bike className="h-4 w-4 mr-2" /> Delivery</>}
+              {type === "table" ? <><TableIcon className="h-4 w-4 mr-2" /> Mesa</>
+                : type === "counter" ? <><User className="h-4 w-4 mr-2" /> Balcão</>
+                  : type === "delivery" ? <><Bike className="h-4 w-4 mr-2" /> Delivery</>
+                    : <><Store className="h-4 w-4 mr-2" /> iFood</>}
             </Button>
           ))}
         </div>
@@ -260,18 +271,7 @@ export default function Sales() {
             </div>
           )}
 
-          <Select value={orderChannel} onValueChange={setOrderChannel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Canal de Venda" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Balcão">Balcão</SelectItem>
-              <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-              <SelectItem value="iFood">iFood</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {orderType === "delivery" && (
+          {orderType === "delivery" && orderChannel !== "iFood" && (
             <div className="flex gap-2 col-span-2">
               <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
