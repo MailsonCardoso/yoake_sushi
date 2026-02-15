@@ -36,6 +36,8 @@ export default function Registrations() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [showProductDeleteConfirm, setShowProductDeleteConfirm] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", address: "", location_link: "", lat: "", lng: "" });
 
@@ -144,6 +146,26 @@ export default function Registrations() {
     }
   };
 
+  const deleteProduct = (id: string) => {
+    setProductToDelete(id);
+    setShowProductDeleteConfirm(true);
+  };
+
+  const confirmProductDelete = async () => {
+    if (!productToDelete) return;
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+      await axios.delete(`https://api2.platformx.com.br/api/products/${productToDelete}`, { headers });
+      toast({ title: "Produto excluído!" });
+      fetchData();
+      setShowProductDeleteConfirm(false);
+      setProductToDelete(null);
+    } catch (error) {
+      toast({ title: "Erro ao excluir produto", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -196,6 +218,9 @@ export default function Registrations() {
                       </span>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openProductModal(product)}>
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => deleteProduct(product.id)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -420,6 +445,28 @@ export default function Registrations() {
             </Button>
             <Button variant="destructive" onClick={confirmDelete} className="flex-1">
               Excluir permanentemente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Product Delete Confirmation Modal */}
+      <Dialog open={showProductDeleteConfirm} onOpenChange={setShowProductDeleteConfirm}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Confirmar Exclusão do Produto
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir este produto do seu cardápio? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowProductDeleteConfirm(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmProductDelete} className="flex-1">
+              Excluir de Vez
             </Button>
           </DialogFooter>
         </DialogContent>
