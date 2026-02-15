@@ -37,9 +37,9 @@ import { cn } from "@/lib/utils";
 
 const categories = [
   { name: "Todos", icon: Utensils },
-  { name: "burgers", label: "Lanches", icon: Pizza },
-  { name: "drinks", label: "Bebidas", icon: Coffee },
-  { name: "portions", label: "Porções", icon: Utensils },
+  { name: "lanches", label: "Lanches", icon: Pizza },
+  { name: "bebidas", label: "Bebidas", icon: Coffee },
+  { name: "porcoes", label: "Porções", icon: Utensils },
 ];
 
 export default function Sales() {

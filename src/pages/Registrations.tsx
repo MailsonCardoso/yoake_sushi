@@ -30,7 +30,7 @@ export default function Registrations() {
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({ name: "", price: "", category: "burgers", description: "" });
+  const [productForm, setProductForm] = useState({ name: "", price: "", category: "lanches", description: "" });
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -44,7 +44,7 @@ export default function Registrations() {
       setProductForm({ name: product.name, price: String(product.price), category: product.category, description: product.description || "" });
     } else {
       setEditingProduct(null);
-      setProductForm({ name: "", price: "", category: "burgers", description: "" });
+      setProductForm({ name: "", price: "", category: "lanches", description: "" });
     }
     setShowProductModal(true);
   };
@@ -258,9 +258,9 @@ export default function Registrations() {
                 <Select value={productForm.category} onValueChange={(v) => setProductForm((p) => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="burgers">Burgers</SelectItem>
-                    <SelectItem value="drinks">Bebidas</SelectItem>
-                    <SelectItem value="portions">Porções</SelectItem>
+                    <SelectItem value="lanches">Lanches</SelectItem>
+                    <SelectItem value="bebidas">Bebidas</SelectItem>
+                    <SelectItem value="porcoes">Porções</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
