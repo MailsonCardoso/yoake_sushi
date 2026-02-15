@@ -54,13 +54,35 @@ export default function Registrations() {
     c.phone.includes(customerSearch)
   );
 
+  const formatCurrency = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    const amount = Number(numbers) / 100;
+    return amount.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    }
+    return numbers.slice(0, 11).replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  };
+
   const openProductModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
-      setProductForm({ name: product.name, price: String(product.price), category: product.category, description: product.description || "" });
+      setProductForm({
+        name: product.name,
+        price: formatCurrency(String(Number(product.price) * 100)),
+        category: product.category,
+        description: product.description || ""
+      });
     } else {
       setEditingProduct(null);
-      setProductForm({ name: "", price: "", category: "lanches", description: "" });
+      setProductForm({ name: "", price: formatCurrency("0"), category: "lanches", description: "" });
     }
     setShowProductModal(true);
   };
@@ -71,9 +93,9 @@ export default function Registrations() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
 
-      const priceValue = typeof productForm.price === 'string'
-        ? Number(productForm.price.replace(',', '.'))
-        : Number(productForm.price);
+      // Limpar formatação para salvar no banco (R$ 1.234,56 -> 1234.56)
+      const cleanPrice = productForm.price.replace(/[^\d]/g, "");
+      const priceValue = Number(cleanPrice) / 100;
 
       if (editingProduct) {
         await axios.put(`https://api2.platformx.com.br/api/products/${editingProduct.id}`, {
@@ -100,7 +122,7 @@ export default function Registrations() {
       setEditingCustomer(customer);
       setCustomerForm({
         name: customer.name,
-        phone: customer.phone,
+        phone: formatPhone(customer.phone),
         address: customer.address,
         location_link: customer.location_link || "",
         lat: customer.lat || "",
@@ -329,8 +351,12 @@ export default function Registrations() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Preço (R$)</Label>
-                <Input type="number" step="0.01" value={productForm.price} onChange={(e) => setProductForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" />
+                <Label>Preço do Produto</Label>
+                <Input
+                  value={productForm.price}
+                  onChange={(e) => setProductForm((p) => ({ ...p, price: formatCurrency(e.target.value) }))}
+                  placeholder="R$ 0,00"
+                />
               </div>
               <div>
                 <Label>Categoria</Label>
@@ -370,7 +396,11 @@ export default function Registrations() {
             </div>
             <div>
               <Label>Telefone (WhatsApp)</Label>
-              <Input value={customerForm.phone} onChange={(e) => setCustomerForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(00) 00000-0000" />
+              <Input
+                value={customerForm.phone}
+                onChange={(e) => setCustomerForm((p) => ({ ...p, phone: formatPhone(e.target.value) }))}
+                placeholder="(00) 00000-0000"
+              />
             </div>
             <div>
               <Label>Endereço de Entrega Padrão</Label>
